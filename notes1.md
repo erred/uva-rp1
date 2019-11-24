@@ -10,28 +10,26 @@
 
 - Information Centric Networking
 
-  - Addresses for data
+  - Single expanded namespace covering layers 3-7
   - Security at the content level
   - Network inline caching
-  - flatten TCP/IP layers 3-7 ?
-  - ex: Named Data Networking (NDN), Content Centric Networking (CCN)
 
 ### Problem statement
 
-Inefficient and mutabled data distribution
+Inefficient and mutable data distribution
 
 ## Content Distribution
 
+- HTTP Signed Exchange SXG
+  - Location based names from DNS / URLs
+  - on IP TCP/UDP HTTP{1,2,3}
+  - signed Web Packages (bundled data)
+  - separates data delivery (CDNs, messaging, etc) from data provenance
 - Content Distribution Networks CDN
   - Location based names from DNS / URLs
   - on IP TCP/UDP HTTP{1,2,3}
   - heirarchical, centralized
   - peer discovery through DNS + IP anycast
-- HTTP Signed Exchange SXG
-  - Location based names from DNS / URLs
-  - on IP TCP/UDP HTTP{1,2,3}
-  - signed Web Packages (bundled data)
-  - leverage existing CDNs
 - InterPlanetary File System IPFS
   - Content Addressable Storage
   - Content hash based names
@@ -52,18 +50,18 @@ Inefficient and mutabled data distribution
   - peer discovery through bootstrapped DHT or trackers
 - Community Information Centric Networking CICN
   - FDio/cicn, obseletes CCNx
-  - ???
+  - merge with NDN ???
 - Hybrid Information Centric Networking hICN
   - FDio/hicn
   - on IPv6 socket extensions
   - Transport layer: stream and datagram options
   - Overlay ICN network
-  - peer discovery through routing protocol
+  - peer discovery through routing protocol (name based)
 - Named Data Networks NDN
   - replaces multitiered IP / port / DNS / URL / paths with single expanded namespace
-  - layer 3 protocol, routing based on names
+  - on layer 2
   - transport layer concerns kicked to application level
-  - Ppeer discovery through routing protocol
+  - Ppeer discovery through routing protocol (name based)
 
 ## Questions
 

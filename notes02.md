@@ -15,6 +15,13 @@
   Anchor-Less Producer Mobility Management in Named Data Networking for Real-Time Multimedia
 - https://arxiv.org/abs/1908.07592
   Gain More for Less: The Surprising Benefits of QoS Management in Constrained NDN Networks
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/ieee_s8740785
+  The Quest for Information-Centric Networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/ieee_s8821346
+  Information-Centric Networking: Research and Standardization Status
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/ieee_s8826381
+  Charging on the Route: An Online Pricing Gateway Congestion Control for ICNs
+
 
 #### 2018
 
@@ -26,6 +33,12 @@
   On the Effects of Subpacketization in Content-Centric Mobile Networks
 - https://arxiv.org/abs/1808.00348
   Network-Coding Approach for Information-Centric Networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/p5bt8d/alma9974325505133
+  2018 1st IEEE International Conference on Hot Information-Centric Networking (HotICN)
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/p5bt8d/alma9990160205133
+  Proceedings of the 5th ACM Conference on Information-Centric Networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/ieee_s8424609
+  A controller-based architecture for information centric network construction and topology management
 
 #### 2017
 
@@ -40,6 +53,12 @@
   Content-Centric Networking - Architectural Overview and Protocol Description
 - https://arxiv.org/abs/1707.01685
   OpenFlow-compliant Topology Management for SDN-enabled Information Centric Networks
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/elsevier_sdoi_10_1016_j_comnet_2017_07_004
+  ACO-inspired Information-Centric Networking routing mechanism
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/elsevier_sdoi_10_1016_j_future_2017_04_013
+  Modeling content transfer performance in information-centric networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/p5bt8d/alma9973416505133
+  Proceedings of the 4th ACM Conference on Information-Centric Networking
 
 #### 2016
 
@@ -68,6 +87,10 @@
   - forward loop elimination with Routing to Anchors Matching Prefixes
 - https://arxiv.org/abs/1610.06138
   Fundamental Limits on Throughput Capacity in Information-Centric Network
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/p5bt8d/alma9968845305133
+  Proceedings of the 3rd ACM Conference on Information-Centric Networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/epo_sCN105553749A
+  ICN logical topology construction method based on SDN
 
 #### 2015
 
@@ -132,6 +155,9 @@
   Optimizing Bi-directional Low-Latency Communication in Named Data Networking
 - https://arxiv.org/abs/1208.0952
   DoS and DDoS in Named-Data Networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/scopus2-s2.0-84861055071
+  A tussle analysis for information-centric networking architectures
+
 
 ### caching
 
@@ -143,6 +169,14 @@
   Quality of Experience from Cache Hierarchies: Keep your low-bitrate close, and high-bitrate closer
 - https://arxiv.org/abs/1905.01011
   Content Delivery Latency of Caching Strategies for Information-Centric IoT
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/ieee_s7874168
+  Privacy-Aware Caching in Information-Centric Networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/wj10.1002%2Fdac.4154
+  Analytical characterization of cache replacement policy impact on content delivery time in information‐centric networks
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/uspatents_s10469348
+  Centrality-based caching in information-centric networks
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/doaj_soai_doaj_org_article_9bcf0ca196094abf91644f15a1844026
+  Efficient Caching for Data-Driven IoT Applications and Fast Content Delivery with Low Latency in ICN
 
 #### 2018
 
@@ -152,8 +186,14 @@
   Effective Caching for the Secure Content Distribution in Information-Centric Networking
 - https://arxiv.org/abs/1810.07229
   Optimal Cache Allocation for Named Data Caching under Network-Wide Capacity Constraint
-  https://arxiv.org/abs/1811.05864
+- https://arxiv.org/abs/1811.05864
   UtilCache: Effectively and Practicably Reducing Link Cost in Information-Centric Network
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/springer_jour10.1007%2Fs11235-018-0433-5
+  COD: caching on demand in information-centric networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/ieee_s8372903
+  Design and Evaluation of Probabilistic Caching in Information-Centric Networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/ieee_s8485799
+  Online Caching and Cooperative Forwarding in Information Centric Networking
 
 #### 2017
 
@@ -193,6 +233,10 @@
 - https://arxiv.org/abs/1512.08469
   Q-caching: an integrated reinforcement-learning approach for caching and routing in information-centric networks
 
+#### 2014
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/ieee_s6883812
+  CRCache: Exploiting the correlation between content popularity and network topology information for ICN caching
+
 #### 2013
 
 - https://arxiv.org/abs/1312.3961
@@ -209,6 +253,12 @@
 
 - https://arxiv.org/abs/1907.11717
   Secure Distribution of Protected Content in Information-Centric Networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/uspatents_s10469491
+  Access control in an information centric network
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/doaj_soai_doaj_org_article_386f4657c119485c9f39bf68fe678c6a
+  Name-Based Security for Information-Centric Networking Architectures
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/elsevier_sdoi_10_1016_j_jnca_2019_07_004
+  NBP: Namespace-based privacy to counter timing-based attack in named data networking
 
 #### 2018
 
@@ -251,6 +301,14 @@
   Bluetooth Mesh under the Microscope: How much ICN is Inside?
 - https://arxiv.org/abs/1908.09271
   Babel Storage: Uncoordinated Content Delivery from Multiple Coded Storage Systems
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/uspatents_s10469373
+  In-network aggregation and distribution of conditional internet of things data subscription in information-centric networking
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/springer_jour10.1186%2Fs13638-019-1458-5
+  Content distribution and protocol design issue for mobile social networks: a survey
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/elsevier_sdoi_10_1016_j_future_2019_05_015
+  Improving fog computing performance via Fog-2-Fog collaboration
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/acm3351482
+  Evolving intelligent devices for the future via named data networking
 
 #### 2018
 
@@ -279,6 +337,8 @@
   Realizing ICN in 3GPP's 5G NextGen Core Architecture
 - https://arxiv.org/abs/1711.10304
   Towards Information-Centric Networking (ICN) Naming for Internet of Things (IoT):The Case of Smart Campus
+- https://lib.uva.nl/permalink/31UKB_UAM1_INST/c6hauk/elsevier_sdoi_10_1016_j_comnet_2017_05_030
+  Multimedia streaming in information-centric networking: A survey and future perspectives
 
 #### 2016
 

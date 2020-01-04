@@ -1,0 +1,72 @@
+name: workflow
+on:
+  push:
+    brnaches:
+      - master
+    paths:
+      - .github/workflows/workflows.yaml
+      - ndn-cxx/*
+      - nfd/*
+      - nlsr/*
+      - ndn-traffic-generator/*
+  schedule:
+    - cron: "0 0 * * *"
+jobs:
+  ndn-cxx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - run: docker build -f ndn-cxx/Dockerfile -t docker.pkg.github.com/seankhliao/uva-rp1/ndn-cxx:latest -t seankhliao/ndn-cxx:latest ndn-cxx
+      - run: docker login -u seankhliao -p $TOKEN
+        env:
+          TOKEN: ${{ secrets.DOCKERPAT }}
+      - run: docker push seankhliao/ndn-cxx:latest
+      - run: docker login docker.pkg.github.com -u seankhliao -p $TOKEN
+        env:
+          TOKEN: ${{ secrets.GITHUBPAT }}
+      - run: docker push docker.pkg.github.com/seankhliao/uva-rp1/ndn-cxx:latest
+  nfd:
+    needs:
+      - ndn-cxx
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - run: docker build -f nfd/Dockerfile -t docker.pkg.github.com/seankhliao/uva-rp1/nfd:latest -t seankhliao/nfd:latest nfd
+      - run: docker login -u seankhliao -p $TOKEN
+        env:
+          TOKEN: ${{ secrets.DOCKERPAT }}
+      - run: docker push seankhliao/nfd:latest
+      - run: docker login docker.pkg.github.com -u seankhliao -p $TOKEN
+        env:
+          TOKEN: ${{ secrets.GITHUBPAT }}
+      - run: docker push docker.pkg.github.com/seankhliao/uva-rp1/nfd:latest
+  nlsr:
+    needs:
+      - nfd
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - run: docker build -f nlsr/Dockerfile -t docker.pkg.github.com/seankhliao/uva-rp1/nlsr:latest -t seankhliao/nlsr:latest nlsr
+      - run: docker login -u seankhliao -p $TOKEN
+        env:
+          TOKEN: ${{ secrets.DOCKERPAT }}
+      - run: docker push seankhliao/nlsr:latest
+      - run: docker login docker.pkg.github.com -u seankhliao -p $TOKEN
+        env:
+          TOKEN: ${{ secrets.GITHUBPAT }}
+      - run: docker push docker.pkg.github.com/seankhliao/uva-rp1/nlsr:latest
+  ndn-traffic-generator:
+    needs:
+      - nfd
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - run: docker build -f ndn-traffic-generator/Dockerfile -t docker.pkg.github.com/seankhliao/uva-rp1/ndn-traffic-generator:latest -t seankhliao/ndn-traffic-generator:latest ndn-traffic-generator
+      - run: docker login -u seankhliao -p $TOKEN
+        env:
+          TOKEN: ${{ secrets.DOCKERPAT }}
+      - run: docker push seankhliao/ndn-traffic-generator:latest
+      - run: docker login docker.pkg.github.com -u seankhliao -p $TOKEN
+        env:
+          TOKEN: ${{ secrets.GITHUBPAT }}
+      - run: docker push docker.pkg.github.com/seankhliao/uva-rp1/ndn-traffic-generator:latest

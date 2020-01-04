@@ -1,6 +1,5 @@
 FROM seankhliao/nfd
 
-WORKDIR /workspace
 RUN git clone --depth 1 https://github.com/named-data/ChronoSync && \
     cd ChronoSync && \
     ./waf configure && \
@@ -26,7 +25,6 @@ RUN git clone --depth 1 https://github.com/named-data/NLSR && \
     cd .. && \
     rm -rf NLSR
 
-RUN mkdir /var/lib/nlsr && \
-    chmod 777 /var/lib/nlsr
-
 # TODO: http://named-data.net/doc/NLSR/current/beginners-guide.html#setting-up-the-security
+# RUN mkdir /var/lib/nlsr && \
+#     chmod 777 /var/lib/nlsr

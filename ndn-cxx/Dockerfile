@@ -6,7 +6,7 @@ RUN apk add --no-cache boost openssl sqlite libpcap && \
     g++ python3 pkgconfig git bash \
     boost-dev openssl-dev sqlite-dev libpcap-dev
 
-RUN git clone https://github.com/named-data/ndn-cxx && \
+RUN git clone --depth 1 https://github.com/named-data/ndn-cxx && \
     cd ndn-cxx && \
     ./waf configure && \
     ./waf && \

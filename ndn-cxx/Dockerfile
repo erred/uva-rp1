@@ -14,3 +14,11 @@ RUN git clone --depth 1 https://github.com/named-data/ndn-cxx && \
     ldconfig /usr/local/lib && \
     cd .. && \
     rm -rf ndn-cxx
+
+RUN git clone --depth 1 https://github.com/named-data/ndn-tools && \
+    cd ndn-tools && \
+    ./waf configure && \
+    ./waf && \
+    ./waf install && \
+    cd .. && \
+    rm -rf ndn-tools

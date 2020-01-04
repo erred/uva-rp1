@@ -3,7 +3,7 @@ FROM alpine
 WORKDIR /workspace
 RUN apk add --no-cache boost openssl sqlite libpcap && \
     apk add --no-cache --virtual build-deps \
-    g++ python3 pkgconfig git bash && \
+    g++ python3 pkgconfig git bash \
     boost-dev openssl-dev sqlite-dev libpcap-dev
 
 RUN git clone https://github.com/named-data/ndn-cxx && \

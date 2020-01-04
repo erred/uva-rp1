@@ -1,0 +1,32 @@
+FROM seankhliao/nfd
+
+WORKDIR /workspace
+RUN git clone --depth 1 https://github.com/named-data/ChronoSync && \
+    cd ChronoSync && \
+    ./waf configure && \
+    ./waf && \
+    ./waf install && \
+    ldconfig /usr/local/lib && \
+    cd .. && \
+    rm -rf ChronoSync
+RUN git clone --depth 1 https://github.com/named-data/PSync && \
+    cd PSync && \
+    ./waf configure && \
+    ./waf && \
+    ./waf install && \
+    ldconfig /usr/local/lib && \
+    cd .. && \
+    rm -rf PSync
+
+RUN git clone --depth 1 https://github.com/named-data/NLSR && \
+    cd NLSR && \
+    ./waf configure && \
+    ./waf && \
+    ./waf install && \
+    cd .. && \
+    rm -rf NLSR
+
+RUN mkdir /var/lib/nlsr && \
+    chmod 777 /var/lib/nlsr
+
+# TODO: http://named-data.net/doc/NLSR/current/beginners-guide.html#setting-up-the-security

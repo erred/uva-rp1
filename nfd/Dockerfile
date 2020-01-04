@@ -1,4 +1,4 @@
-FROM seankhliao/nfd
+FROM seankhliao/ndn-cxx
 
 WORKDIR /workspace
 RUN git clone --recursive https://github.com/named-data/NFD nfd

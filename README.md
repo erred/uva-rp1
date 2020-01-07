@@ -2,7 +2,7 @@
 
 Research Project 1 Notes
 
-[notes](notes1.md): initial notes
+HackMD: [proposal](https://hackmd.io/fWNmSIkLTHyEzYbGh7GWdA)
 
 ## docker containers
 

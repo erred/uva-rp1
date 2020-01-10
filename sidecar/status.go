@@ -11,12 +11,12 @@ func status(ctx context.Context) (*NFDStatus, error) {
 
 	b, err := exec.CommandContext(ctx, "nfdc", "status", "report", "xml").Output()
 	if err != nil {
-		return nil, fmt.Errorf("Status nfdc: %w", err)
+		return nil, fmt.Errorf("status nfdc: %w", err)
 	}
 	var status NFDStatus
 	err = xml.Unmarshal(b, &status)
 	if err != nil {
-		return nil, fmt.Errorf("Status unmarshal: %w", err)
+		return nil, fmt.Errorf("status unmarshal: %w", err)
 	}
 	return &status, nil
 }

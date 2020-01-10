@@ -1,7 +1,7 @@
 name: workflow
 on:
   push:
-    brnaches:
+    branches:
       - master
     paths:
       - .github/workflows/workflow.yaml

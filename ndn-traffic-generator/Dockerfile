@@ -1,4 +1,4 @@
-FROM seankhliao/ndn-cxx
+FROM seankhliao/nfd
 
 RUN git clone --recursive --depth 1 https://github.com/named-data/ndn-traffic-generator && \
     cd ndn-traffic-generator && \

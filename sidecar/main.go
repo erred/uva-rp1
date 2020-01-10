@@ -26,10 +26,11 @@ func main() {
 	done := c.run(ctx)
 
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig)
+	signal.Notify(sig, os.Interrupt)
 	select {
 	case s := <-sig:
 		log.Printf("sidecar: got signal %s", s)
+		cancel()
 	case <-ctx.Done():
 	}
 	<-done
@@ -112,6 +113,7 @@ func (c *Client) status(ctx context.Context) {
 		log.Printf("sidecar: memory: %s", err)
 	}
 	for _, st := range c.sds {
+		log.Printf("sidecar: mem %d, cs.entries %d, satisfied %d, unsatisfied %d\n", mem, status.Cs.NEntries, status.GeneralStatus.NSatisfiedInterests, status.GeneralStatus.NUnsatisfiedInterests)
 		// TODO: routes (or use NLSR)
 		for _, a := range c.public {
 			st.Gauge("addrs."+a, 1, c.sampleRate)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,13 +11,6 @@ import (
 	"time"
 
 	"github.com/cactus/go-statsd-client/statsd"
-)
-
-const (
-	// comma separated list of hostname:ports
-	// of servers to send stats to
-	// overrriden by positional arguments
-	CollectorEnv = "SIDECAR_COLLECTORS"
 )
 
 func main() {
@@ -42,46 +36,54 @@ func main() {
 }
 
 type Client struct {
-	// TODO: expose config options
-	scapeInterval time.Duration
-	sampleRate    float32
-	sds           []statsd.Statter
+	scrapeInterval time.Duration
+	sampleRate     float32
+	sds            []statsd.Statter
 
+	name     string
+	public   []string
 	pagesize int
 	nfdpid   int
 }
 
 func NewClient() (*Client, error) {
-	var sds []statsd.Statter
-	var addrs = strings.Split(os.Getenv(CollectorEnv), ",")
-	if len(os.Args) > 1 {
-		addrs = os.Args[1:]
-	}
-	for _, a := range addrs {
+	c := &Client{}
+	var addrs, reachable string
+	var sr float64
+	flag.DurationVar(&c.scrapeInterval, "interval", 15*time.Second, "scrape / flush interval")
+	flag.Float64Var(&sr, "sample", 1, "sample rate 0-1")
+	flag.StringVar(&addrs, "servers", "145.100.104.117:8125", "comma separated list of reporting servers host:port")
+	flag.StringVar(&reachable, "addrs", "", "comma separated list of public addresses net://host:port")
+	flag.StringVar(&c.name, "name", "ndn_node", "name of node in reporting")
+	flag.Parse()
+	c.sampleRate = float32(sr)
+	c.public = strings.Split(reachable, ",")
+
+	for _, a := range strings.Split(addrs, ",") {
+		// TODO: find a name prefix
 		s, err := statsd.NewClient(a, "some-name")
 		if err != nil {
-			return nil, fmt.Errorf("sidecar: create client %w", err)
+			return nil, fmt.Errorf("create client: %w", err)
 		}
-		sds = append(sds, s)
+		c.sds = append(c.sds, s)
 	}
-	pid, err := pid("nfd")
+	c.pagesize = os.Getpagesize()
+	var err error
+	c.nfdpid, err = pid("nfd")
 	if err != nil {
-		return nil, fmt.Errorf("sidecar: get nfd pid %w", err)
+		return nil, fmt.Errorf("create client: get nfd pid %w", err)
 	}
-	return &Client{
-		scapeInterval: 15 * time.Second,
-		sampleRate:    1,
-		sds:           sds,
-		pagesize:      os.Getpagesize(),
-		nfdpid:        pid,
-	}, nil
+	return c, nil
 }
-func (c *Client) close() {
 
+func (c *Client) close() {
+	for _, s := range c.sds {
+		s.Close()
+	}
 }
 
 func (c *Client) run(ctx context.Context) chan struct{} {
-	t := time.NewTicker(c.scapeInterval)
+	t := time.NewTicker(c.scrapeInterval)
 	done := make(chan struct{})
 	go func() {
 		<-ctx.Done()
@@ -91,7 +93,7 @@ func (c *Client) run(ctx context.Context) chan struct{} {
 	go func() {
 		for range t.C {
 			go func() {
-				ctx, cancel := context.WithTimeout(ctx, c.scapeInterval)
+				ctx, cancel := context.WithTimeout(ctx, c.scrapeInterval)
 				defer cancel()
 				c.status(ctx)
 			}()
@@ -110,40 +112,45 @@ func (c *Client) status(ctx context.Context) {
 		log.Printf("sidecar: memory: %s", err)
 	}
 	for _, st := range c.sds {
-		_, _, _ = st, status, mem
-		// TODO: memory
 		// TODO: routes (or use NLSR)
-		// st.Gauge("", , c.sampleRate)
-		// status.GeneralStatus.NCsEntries
-		// status.GeneralStatus.NFibEntries
-		// status.GeneralStatus.NPitEntries
-		// status.GeneralStatus.NMeasurementsEntries
-		// status.GeneralStatus.NCsEntries
-		// status.GeneralStatus.NSatisfiedInterests
-		// status.GeneralStatus.NUnsatisfiedInterests
-		// status.GeneralStatus.PacketCounters.IncomingPackets.NInterests
-		// status.GeneralStatus.PacketCounters.IncomingPackets.NData
-		// status.GeneralStatus.PacketCounters.IncomingPackets.NNacks
-		// status.GeneralStatus.PacketCounters.OutgoingPackets.NInterests
-		// status.GeneralStatus.PacketCounters.OutgoingPackets.NData
-		// status.GeneralStatus.PacketCounters.OutgoingPackets.NNacks
-		// int64(len(status.Channels.Channel))
-		// int64(len(status.Faces.Face))
-		// for _, face := range status.Faces.Face {
-		// 	face.PacketCounters.IncomingPackets.NInterests
-		// 	face.PacketCounters.IncomingPackets.NData
-		// 	face.PacketCounters.IncomingPackets.NNacks
-		// 	face.PacketCounters.OutgoingPackets.NInterests
-		// 	face.PacketCounters.OutgoingPackets.NData
-		// 	face.PacketCounters.OutgoingPackets.NNacks
-		// 	face.ByteCounters.IncomingBytes
-		// 	face.ByteCounters.OutgoingBytes
-		// }
-		// int64(len(status.Fib.FibEntry))
-		// int64(len(status.Rib.RibEntry))
-		// status.Cs.Capacity
-		// status.Cs.NEntries
-		// status.Cs.NHits
-		// status.Cs.NMisses
+		for _, a := range c.public {
+			st.Gauge("addrs."+a, 1, c.sampleRate)
+		}
+
+		st.Gauge("memory", mem, c.sampleRate)
+
+		st.Gauge("cs.capacity", status.Cs.Capacity, c.sampleRate)
+		st.Gauge("cs.entries", status.Cs.NEntries, c.sampleRate)
+		st.Gauge("cs.hits", status.Cs.NHits, c.sampleRate)
+		st.Gauge("cs.misses", status.Cs.NMisses, c.sampleRate)
+
+		st.Gauge("fib.entries", status.GeneralStatus.NFibEntries, c.sampleRate)
+		st.Gauge("pit.entries", status.GeneralStatus.NPitEntries, c.sampleRate)
+		st.Gauge("rib.entries", int64(len(status.Rib.RibEntry)), c.sampleRate)
+		st.Gauge("channel.entries", int64(len(status.Channels.Channel)), c.sampleRate)
+		st.Gauge("nametree.entries", status.GeneralStatus.NNameTreeEntries, c.sampleRate)
+
+		st.Gauge("interests.satisfied", status.GeneralStatus.NSatisfiedInterests, c.sampleRate)
+		st.Gauge("interests.unsatisfied", status.GeneralStatus.NUnsatisfiedInterests, c.sampleRate)
+
+		st.Gauge("incoming.interests", status.GeneralStatus.PacketCounters.IncomingPackets.NInterests, c.sampleRate)
+		st.Gauge("incoming.data", status.GeneralStatus.PacketCounters.IncomingPackets.NData, c.sampleRate)
+		st.Gauge("incoming.nacks", status.GeneralStatus.PacketCounters.IncomingPackets.NNacks, c.sampleRate)
+		st.Gauge("outgoing.interests", status.GeneralStatus.PacketCounters.OutgoingPackets.NInterests, c.sampleRate)
+		st.Gauge("outgoing.data", status.GeneralStatus.PacketCounters.OutgoingPackets.NData, c.sampleRate)
+		st.Gauge("outgoing.nacks", status.GeneralStatus.PacketCounters.OutgoingPackets.NNacks, c.sampleRate)
+
+		st.Gauge("face.entries", int64(len(status.Faces.Face)), c.sampleRate)
+		for _, face := range status.Faces.Face {
+			pref := fmt.Sprintf("face.%d", face.FaceId)
+			st.Gauge(pref+".incoming.interests", face.PacketCounters.IncomingPackets.NInterests, c.sampleRate)
+			st.Gauge(pref+".incoming.data", face.PacketCounters.IncomingPackets.NData, c.sampleRate)
+			st.Gauge(pref+".incoming.nacks", face.PacketCounters.IncomingPackets.NNacks, c.sampleRate)
+			st.Gauge(pref+".incoming.bytes", face.ByteCounters.IncomingBytes, c.sampleRate)
+			st.Gauge(pref+".outgoing.interests", face.PacketCounters.OutgoingPackets.NInterests, c.sampleRate)
+			st.Gauge(pref+".outgoing.data", face.PacketCounters.OutgoingPackets.NData, c.sampleRate)
+			st.Gauge(pref+".outgoing.nacks", face.PacketCounters.OutgoingPackets.NNacks, c.sampleRate)
+			st.Gauge(pref+".outgoing.bytes", face.ByteCounters.OutgoingBytes, c.sampleRate)
+		}
 	}
 }

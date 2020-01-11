@@ -62,7 +62,7 @@ func NewClient() (*Client, error) {
 
 	for _, a := range strings.Split(addrs, ",") {
 		// TODO: find a name prefix
-		s, err := statsd.NewClient(a, "some-name")
+		s, err := statsd.NewClient(a, c.name)
 		if err != nil {
 			return nil, fmt.Errorf("create client: %w", err)
 		}

@@ -3,6 +3,13 @@ PREFIX := seankhliao
 .PHONY: all
 all: ndn-collector ndn-server
 
+.PHONY: push
+push:
+	docker push ${PREFIX}/ndn-base
+	docker push ${PREFIX}/ndn-collector
+	docker push ${PREFIX}/ndn-sidecar
+	docker push ${PREFIX}/ndn-server
+
 .PHONY: ndn-collector
 ndn-collector:
 	docker build -f ndn-collector/Dockerfile -t ${PREFIX}/ndn-collector ndn-collector

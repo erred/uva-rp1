@@ -12,8 +12,17 @@ on:
   schedule:
     - cron: "0 0 * * *"
 jobs:
+  precache:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker pull seankhliao/ndn-base
+      - run: docker pull seankhliao/ndn-collector
+      - run: docker pull seankhliao/ndn-server
+      - run: docker pull seankhliao/ndn-sidecar
   ndn-base:
     runs-on: ubuntu-latest
+    needs:
+      - precache
     steps:
       - uses: actions/checkout@master
       - run: docker build -f ndn-base/Dockerfile -t docker.pkg.github.com/seankhliao/uva-rp1/ndn-base:latest -t seankhliao/ndn-base:latest ndn-base
@@ -27,6 +36,8 @@ jobs:
       - run: docker push docker.pkg.github.com/seankhliao/uva-rp1/ndn-base:latest
   ndn-sidecar:
     runs-on: ubuntu-latest
+    needs:
+      - precache
     steps:
       - uses: actions/checkout@master
       - run: docker build -f ndn-sidecar/Dockerfile -t docker.pkg.github.com/seankhliao/uva-rp1/ndn-sidecar:latest -t seankhliao/ndn-sidecar:latest ndn-sidecar
@@ -40,6 +51,8 @@ jobs:
       - run: docker push docker.pkg.github.com/seankhliao/uva-rp1/ndn-sidecar:latest
   ndn-collector:
     runs-on: ubuntu-latest
+    needs:
+      - precache
     steps:
       - uses: actions/checkout@master
       - run: docker build -f ndn-collector/Dockerfile -t docker.pkg.github.com/seankhliao/uva-rp1/ndn-collector:latest -t seankhliao/ndn-collector:latest ndn-collector
@@ -54,6 +67,7 @@ jobs:
   ndn-server:
     runs-on: ubuntu-latest
     needs:
+      - precache
       - ndn-base
       - ndn-sidecar
     steps:

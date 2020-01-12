@@ -1,0 +1,14 @@
+FROM ndn-tools AS tools
+FROM ndn-nfd AS nfd
+FROM ndn-nlsr AS nlsr
+FROM ndn-traffic AS traffic
+
+FROM ndn-cxx
+COPY --from=tools /usr/local/ /usr/local/
+COPY --from=nfd /usr/local/ /usr/local/
+COPY --from=nlsr /usr/local/ /usr/local/
+COPY --from=traffic /usr/local/ /usr/local/
+COPY conf /
+ENV NDN_TRAFFIF_SERVER_DISABLED=1 \
+    NDN_TRAFFIF_CLIENT_DISABLED=1
+ENTRYPOINT /entrypoint

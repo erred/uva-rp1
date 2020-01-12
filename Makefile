@@ -1,17 +1,20 @@
 PREFIX := seankhliao
 
 .PHONY: all
-all: nlsr ndn-traffic-generator
+all: ndn-collector ndn-server
 
-.PHONY: ndn-cxx nfd nlsr ndn-traffic-generator
-ndn-cxx:
-	docker build -f ndn-cxx/Dockerfile -t ${PREFIX}/ndn-cxx ndn-cxx
+.PHONY: ndn-collector
+ndn-collector:
+	docker build -f ndn-collector/Dockerfile -t ${PREFIX}/ndn-collector ndn-collector
 
-nfd: ndn-cxx
-	docker build -f nfd/Dockerfile -t ${PREFIX}/nfd nfd
+.PHONY: ndn-server
+ndn-server: ndn-base ndn-sidecar
+	docker build -f ndn-server/Dockerfile -t ${PREFIX}/ndn-server ndn-server
 
-nlsr: nfd
-	docker build -f nlsr/Dockerfile -t ${PREFIX}/nlsr nlsr
+.PHONY: ndn-sidecar
+ndn-sidecar:
+	docker build -f ndn-sidecar/Dockerfile -t ${PREFIX}/ndn-sidecar ndn-sidecar
 
-ndn-traffic-generator: nfd
-	docker build -f ndn-traffic-generator/Dockerfile -t ${PREFIX}/ndn-traffic-generator ndn-traffic-generator
+.PHONY: ndn-base
+ndn-base:
+	docker build -f ndn-base/Dockerfile -t ${PREFIX}/ndn-base ndn-base

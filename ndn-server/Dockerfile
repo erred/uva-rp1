@@ -1,6 +1,6 @@
-FROM sidecar AS sidecar
+FROM seankhliao/ndn-sidecar AS sidecar
 
-FROM ndn-base
+FROM seankhliao/ndn-base
 COPY --from=sidecar /bin/sidecar /bin
 COPY conf /
 

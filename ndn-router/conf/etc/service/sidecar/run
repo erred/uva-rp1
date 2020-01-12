@@ -1,0 +1,6 @@
+#!/bin/sh
+
+[ ! -z ${ADDRS} ] && ARGS="-addrs ${ADDRS}"
+[ ! -z ${SERVERS} ] && ARGS="${ARGS} -servers ${SERVERS}"
+
+exec sidecar -name ${NAME} ${ARGS}

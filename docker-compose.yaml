@@ -1,0 +1,65 @@
+version: "3.7"
+networks:
+  servers:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.0.0/24"
+  clients:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.2.0/24"
+services:
+  collector:
+    container_name: collector
+    build: ./ndn-collector
+    image: seankhliao/ndn-collector
+    ports:
+      # expose grafana on host machine
+      - "3000"
+    expose:
+      # grafana dashboard
+      # - "3000"
+      # statsd
+      - "8125"
+    networks:
+      servers:
+        ipv4_address: "172.18.0.2"
+
+  server1:
+    container_name: server1
+    build: ./ndn-server
+    image: seankhliao/ndn-server
+    expose:
+      # unicast
+      - "6363"
+      # multicast
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.18.0.11"
+    environment:
+      NAME: server1
+
+  router1:
+    container_name: router1
+    build: ./ndn-router
+    image: seankhliao/ndn-router
+    expose:
+      # ndn-unicast
+      - "6363"
+      # ndn-multicast
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.18.0.21"
+      clients:
+        ipv4_address: "172.18.2.21"
+    environment:
+      NAME: router1
+
+  client1:
+    container_name: client1
+    build: ./ndn-client
+    image: seankhliao/ndn-client

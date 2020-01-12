@@ -3,14 +3,17 @@ PREFIX := seankhliao
 .PHONY: all
 all: ndn-collector ndn-server ndn-router ndn-client
 
-.PHONY: push
-push:
-	docker push ${PREFIX}/ndn-base
-	docker push ${PREFIX}/ndn-collector
-	docker push ${PREFIX}/ndn-sidecar
-	docker push ${PREFIX}/ndn-server
-	docker push ${PREFIX}/ndn-router
-	docker push ${PREFIX}/ndn-client
+ACTIONS = push \
+		  pull
+IMGS = ndn-collector \
+	   ndn-server \
+	   ndn-router \
+	   ndn-client
+
+
+.PHONY: $(ACTIONS)
+$(ACTIONS):
+	for img in $(IMGS); do docker $@ ${PREFIX}/$${img} ; done
 
 .PHONY: ndn-collector
 ndn-collector:

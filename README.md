@@ -1,10 +1,12 @@
 # uva-rp1
 
-Research Project 1 Notes
+Research Project 1
 
-HackMD: [proposal](https://hackmd.io/fWNmSIkLTHyEzYbGh7GWdA)
+## 30: Automated planning and adaptation of Named Data Networks in cloud environments
 
-## docker containers
+[notes](notes)
+
+## Containers
 
 ### ndn-collector
 
@@ -19,6 +21,18 @@ contains:
 
 - ndn-base
 - ndn-sidecar
+
+### ndn-router
+
+TODO: implement
+
+### ndn-client
+
+TODO: implement
+
+## Build Containers
+
+not intended to run directly
 
 ### ndn-sidecar
 

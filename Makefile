@@ -1,21 +1,26 @@
 PREFIX := seankhliao
-ACTIONS = push \
+DOCKER_CMD = push \
 		  pull
-IMGS = ndn-collector \
-	   ndn-server \
+COMPOSE_CMD = up \
+		  down
+IMGS = ndn-server \
 	   ndn-router \
-	   ndn-client
+	   ndn-client \
+	   ndn-grafana \
+	   ndn-prometheus
 
-.PHONY: all
-all: ndn-collector ndn-server ndn-router ndn-client
+.PHONY: all build
+all: build
 
-.PHONY: $(ACTIONS)
-$(ACTIONS):
+build: ndn-server ndn-router ndn-client ndn-grafana ndn-prometheus
+
+.PHONY: $(COMPOSE_CMD)
+$(COMPOSE_CMD):
+	docker-compose $@
+
+.PHONY: $(DOCKER_CMD)
+$(DOCKER_CMD):
 	for img in $(IMGS); do docker $@ ${PREFIX}/$${img} ; done
-
-.PHONY: ndn-collector
-ndn-collector:
-	docker build  -t ${PREFIX}/$@ $@
 
 .PHONY: ndn-server
 ndn-server: ndn-base ndn-sidecar
@@ -35,4 +40,12 @@ ndn-sidecar:
 
 .PHONY: ndn-base
 ndn-base:
+	docker build -t ${PREFIX}/$@ $@
+
+.PHONY: ndn-grafana
+ndn-grafana:
+	docker build -t ${PREFIX}/$@ $@
+
+.PHONY: ndn-prometheus
+ndn-prometheus:
 	docker build -t ${PREFIX}/$@ $@

@@ -11,21 +11,30 @@ networks:
       config:
         - subnet: "172.18.2.0/24"
 services:
-  collector:
-    container_name: collector
-    build: ./ndn-collector
-    image: seankhliao/ndn-collector
+  prometheus:
+    container_name: prometheus
+    build: ./ndn-prometheus
+    image: seankhliao/ndn-prometheus
     ports:
-      # expose grafana on host machine
-      - "3000"
-    expose:
-      # grafana dashboard
-      # - "3000"
-      # statsd
-      - "8125"
+      # watcher
+      - "8000"
+      # prometheus
+      - "9090"
     networks:
       servers:
         ipv4_address: "172.18.0.2"
+  grafana:
+    container_name: grafana
+    build: ./ndn-grafana
+    image: seankhliao/ndn-grafana
+    ports:
+      # grafana
+      - "3000"
+    networks:
+      servers:
+        ipv4_address: "172.18.0.3"
+    depends_on:
+      - prometheus
 
   server1:
     container_name: server1
@@ -36,14 +45,17 @@ services:
       - "6363"
       # multicast
       - "56363"
+      # prometheus
+      - "8000"
     networks:
       servers:
         ipv4_address: "172.18.0.11"
     volumes:
       - ./volumes/server1/ndn:/usr/local/etc/ndn
+    depends_on:
+      - prometheus
     environment:
-      NAME: server1
-      SERVERS: "172.18.0.2:8125"
+      IPADDR: "172.18.0.11"
   server2:
     container_name: server2
     build: ./ndn-server
@@ -53,14 +65,17 @@ services:
       - "6363"
       # multicast
       - "56363"
+      # prometheus
+      - "8000"
     networks:
       servers:
         ipv4_address: "172.18.0.12"
     volumes:
       - ./volumes/server2/ndn:/usr/local/etc/ndn
+    depends_on:
+      - prometheus
     environment:
-      NAME: server2
-      SERVERS: "172.18.0.2:8125"
+      IPADDR: "172.18.0.12"
 
   router1:
     container_name: router1
@@ -71,6 +86,8 @@ services:
       - "6363"
       # ndn-multicast
       - "56363"
+      # prometheus
+      - "8000"
     networks:
       servers:
         ipv4_address: "172.18.0.21"
@@ -78,9 +95,10 @@ services:
         ipv4_address: "172.18.2.21"
     volumes:
       - ./volumes/router1/ndn:/usr/local/etc/ndn
+    depends_on:
+      - prometheus
     environment:
-      NAME: router1
-      SERVERS: "172.18.0.2:8125"
+      IPADDR: "172.18.0.21"
 
   client1:
     container_name: client1

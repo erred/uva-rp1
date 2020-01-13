@@ -74,7 +74,7 @@ type Faces struct {
 }
 type Face struct {
 	Text             string         `xml:",chardata"`
-	FaceId           int            `xml:"faceId"`
+	FaceId           string         `xml:"faceId"`
 	RemoteUri        string         `xml:"remoteUri"`
 	LocalUri         string         `xml:"localUri"`
 	FaceScope        string         `xml:"faceScope"`

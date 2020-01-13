@@ -64,6 +64,6 @@ RUN git clone --depth 1 https://github.com/named-data/NLSR && \
     rm -rf NLSR
 
 COPY conf /
-ENV NDN_TRAFFIF_SERVER_DISABLED=1 \
-    NDN_TRAFFIF_CLIENT_DISABLED=1
+ENV NDN_TRAFFIC_SERVER_DISABLED=1 \
+    NDN_TRAFFIC_CLIENT_DISABLED=1
 ENTRYPOINT /entrypoint

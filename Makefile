@@ -6,14 +6,12 @@ IMGS = ndn-collector \
 	   ndn-router \
 	   ndn-client
 
-.PHONY: $(ACTIONS)
-$(ACTIONS):
-	for img in $(IMGS); do docker $@ ${PREFIX}/$${img} ; done
-
-
 .PHONY: all
 all: ndn-collector ndn-server ndn-router ndn-client
 
+.PHONY: $(ACTIONS)
+$(ACTIONS):
+	for img in $(IMGS); do docker $@ ${PREFIX}/$${img} ; done
 
 .PHONY: ndn-collector
 ndn-collector:

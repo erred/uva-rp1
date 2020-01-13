@@ -39,8 +39,28 @@ services:
     networks:
       servers:
         ipv4_address: "172.18.0.11"
+    volumes:
+      - ./volumes/server1/ndn:/usr/local/etc/ndn
     environment:
       NAME: server1
+      SERVERS: "172.18.0.2:8125"
+  server2:
+    container_name: server2
+    build: ./ndn-server
+    image: seankhliao/ndn-server
+    expose:
+      # unicast
+      - "6363"
+      # multicast
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.18.0.12"
+    volumes:
+      - ./volumes/server2/ndn:/usr/local/etc/ndn
+    environment:
+      NAME: server2
+      SERVERS: "172.18.0.2:8125"
 
   router1:
     container_name: router1
@@ -56,10 +76,18 @@ services:
         ipv4_address: "172.18.0.21"
       clients:
         ipv4_address: "172.18.2.21"
+    volumes:
+      - ./volumes/router1/ndn:/usr/local/etc/ndn
     environment:
       NAME: router1
+      SERVERS: "172.18.0.2:8125"
 
   client1:
     container_name: client1
     build: ./ndn-client
     image: seankhliao/ndn-client
+    networks:
+      clients:
+        ipv4_address: "172.18.2.31"
+    volumes:
+      - ./volumes/client1/ndn:/usr/local/etc/ndn

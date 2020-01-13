@@ -35,10 +35,10 @@ RUN apk add --no-cache \
         /var/log/graphite \
         /etc/service/grafana && \
     mv /run.sh /etc/service/grafana/run
-ENV STATSD_INTERFACE udp
 COPY --from=graphite /etc /etc
 COPY --from=graphite /opt /opt
 COPY --from=graphite /usr/local/bin /usr/local/bin
 COPY --from=graphite /entrypoint /entrypoint
+ENV STATSD_INTERFACE udp
 
 ENTRYPOINT /entrypoint

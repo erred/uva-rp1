@@ -1,6 +1,8 @@
 PREFIX := seankhliao
-ACTIONS = push \
+DOCKER_CMD = push \
 		  pull
+COMPOSE_CMD = up \
+		  down
 IMGS = ndn-collector \
 	   ndn-server \
 	   ndn-router \
@@ -9,8 +11,12 @@ IMGS = ndn-collector \
 .PHONY: all
 all: ndn-collector ndn-server ndn-router ndn-client
 
-.PHONY: $(ACTIONS)
-$(ACTIONS):
+.PHONY: $(COMPOSE_CMD)
+$(COMPOSE_CMD):
+	docker-compose $@
+
+.PHONY: $(DOCKER_CMD)
+$(DOCKER_CMD):
 	for img in $(IMGS); do docker $@ ${PREFIX}/$${img} ; done
 
 .PHONY: ndn-collector

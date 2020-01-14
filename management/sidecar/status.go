@@ -4,11 +4,70 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"log"
 	"os/exec"
 )
 
-func status(ctx context.Context) (*NFDStatus, error) {
+func (s *Server) status() {
+	ctx, cancel := context.WithTimeout(context.Background(), s.scrapeInterval)
+	defer cancel()
 
+	mem, err := memory(s.nfdpid, s.pagesize)
+	if err != nil {
+		log.Printf("status memory: %s\n", err)
+	} else {
+		s.memory.Set(float64(mem))
+	}
+
+	status, err := status(ctx)
+	if err != nil {
+		log.Printf("status: %s\n", err)
+		return
+	}
+
+	e := <-s.addrs
+	e.update(status)
+	s.addrs <- e
+
+	r := <-s.routes
+	r.update(status)
+	s.routes <- r
+
+	s.cs_capacity.Set(float64(status.Cs.Capacity))
+	s.cs_entries.Set(float64(status.Cs.NEntries))
+	s.cs_hits.Set(float64(status.Cs.NHits))
+	s.cs_misses.Set(float64(status.Cs.NMisses))
+	s.nt_entries.Set(float64(status.GeneralStatus.NNameTreeEntries))
+	s.fib_entries.Set(float64(status.GeneralStatus.NFibEntries))
+	s.rib_entries.Set(float64(len(status.Rib.RibEntry)))
+	s.pit_entries.Set(float64(status.GeneralStatus.NPitEntries))
+	s.channel_entries.Set(float64(len(status.Channels.Channel)))
+	s.face_entries.Set(float64(len(status.Faces.Face)))
+
+	s.interests.WithLabelValues("yes").Set(float64(status.GeneralStatus.NSatisfiedInterests))
+	s.interests.WithLabelValues("no").Set(float64(status.GeneralStatus.NUnsatisfiedInterests))
+
+	s.pkts.WithLabelValues("in", "interest").Set(float64(status.GeneralStatus.PacketCounters.IncomingPackets.NInterests))
+	s.pkts.WithLabelValues("in", "data").Set(float64(status.GeneralStatus.PacketCounters.IncomingPackets.NData))
+	s.pkts.WithLabelValues("in", "nack").Set(float64(status.GeneralStatus.PacketCounters.IncomingPackets.NNacks))
+	s.pkts.WithLabelValues("out", "interest").Set(float64(status.GeneralStatus.PacketCounters.OutgoingPackets.NInterests))
+	s.pkts.WithLabelValues("out", "data").Set(float64(status.GeneralStatus.PacketCounters.OutgoingPackets.NData))
+	s.pkts.WithLabelValues("out", "nack").Set(float64(status.GeneralStatus.PacketCounters.OutgoingPackets.NNacks))
+
+	for _, f := range status.Faces.Face {
+		s.face_bytes.WithLabelValues("in", f.FaceId).Set(float64(f.ByteCounters.IncomingBytes))
+		s.face_bytes.WithLabelValues("out", f.FaceId).Set(float64(f.ByteCounters.OutgoingBytes))
+
+		s.face_pkts.WithLabelValues("in", "interest", f.FaceId).Set(float64(f.PacketCounters.IncomingPackets.NInterests))
+		s.face_pkts.WithLabelValues("in", "data", f.FaceId).Set(float64(f.PacketCounters.IncomingPackets.NData))
+		s.face_pkts.WithLabelValues("in", "nack", f.FaceId).Set(float64(f.PacketCounters.IncomingPackets.NNacks))
+		s.face_pkts.WithLabelValues("out", "interest", f.FaceId).Set(float64(f.PacketCounters.OutgoingPackets.NInterests))
+		s.face_pkts.WithLabelValues("out", "data", f.FaceId).Set(float64(f.PacketCounters.OutgoingPackets.NData))
+		s.face_pkts.WithLabelValues("out", "nack", f.FaceId).Set(float64(f.PacketCounters.OutgoingPackets.NNacks))
+	}
+}
+
+func status(ctx context.Context) (*NFDStatus, error) {
 	b, err := exec.CommandContext(ctx, "nfdc", "status", "report", "xml").CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("nfdc: %w: %s", err, b)
@@ -117,8 +176,8 @@ type NextHops struct {
 }
 type NextHop struct {
 	Text   string `xml:",chardata"`
-	FaceId int    `xml:"faceId"`
-	Cost   int    `xml:"cost"`
+	FaceId int64  `xml:"faceId"`
+	Cost   int64  `xml:"cost"`
 }
 type Rib struct {
 	Text     string     `xml:",chardata"`
@@ -135,9 +194,9 @@ type Routes struct {
 }
 type Route struct {
 	Text   string     `xml:",chardata"`
-	FaceId int        `xml:"faceId"`
+	FaceId int64      `xml:"faceId"`
 	Origin string     `xml:"origin"`
-	Cost   int        `xml:"cost"`
+	Cost   int64      `xml:"cost"`
 	Flags  RouteFlags `xml:"flags"`
 }
 type RouteFlags struct {

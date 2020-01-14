@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/seankhliao/uva-rp1/management/watcher"
 	"log"
+	"os"
+
+	"github.com/seankhliao/uva-rp1/management/watcher"
 )
 
 func main() {
 	log.SetPrefix("watcher | ")
-	c := watcher.NewClient()
-	c.Run()
+	watcher.NewServer(os.Args).Serve()
 }

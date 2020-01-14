@@ -9,9 +9,9 @@ import (
 
 func status(ctx context.Context) (*NFDStatus, error) {
 
-	b, err := exec.CommandContext(ctx, "nfdc", "status", "report", "xml").Output()
+	b, err := exec.CommandContext(ctx, "nfdc", "status", "report", "xml").CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("status nfdc: %w", err)
+		return nil, fmt.Errorf("nfdc: %w: %s", err, b)
 	}
 	var status NFDStatus
 	err = xml.Unmarshal(b, &status)

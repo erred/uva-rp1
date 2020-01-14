@@ -4,118 +4,143 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 )
 
 func main() {
-	var svc ServiceDiscovery
-	var port = 8000
-	var err error
+	log.SetPrefix("watcher | ")
+	c := NewClient()
 
-	flag.IntVar(&port, "port", port, "port to listen on")
-	flag.StringVar(&svc.file, "file", "/etc/prometheus/file_sd.json", "file to write to")
+	flag.DurationVar(&c.keepAlive, "keepalive", time.Minute, "flush timer")
+	flag.IntVar(&c.port, "port", 8000, "port to listen on")
+	flag.StringVar(&c.file, "file", "/etc/prometheus/file_sd.json", "file to write to")
 	flag.Parse()
 
-	svc.services, err = readSD(svc.file)
-	if err != nil {
-		log.Println("watcher: ", err)
-	}
+	go c.addrUpdater()
+	go c.targetUpdater()
 
-	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		err := svc.register(r.Body)
-		defer r.Body.Close()
-		if err != nil {
-			log.Println("watcher: ", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+	http.HandleFunc("/addrs", c.listAddrs)
+	http.HandleFunc("/register", c.register)
+	http.ListenAndServe(fmt.Sprintf(":%d", c.port), nil)
+}
+
+type Client struct {
+	keepAlive time.Duration
+	targets   map[string]time.Time
+	addrs     map[string]time.Time
+
+	port int
+	file string
+
+	tin  chan string
+	cin  chan []string
+	cout chan []string
+}
+
+func NewClient() *Client {
+	return &Client{
+		targets: make(map[string]time.Time),
+		addrs:   make(map[string]time.Time),
+		cin:     make(chan []string),
+		cout:    make(chan []string),
+		tin:     make(chan string),
+	}
+}
+
+func (c *Client) register(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Printf("register %s\n", err)
+		return
+	}
+	var not Notification
+	err = json.Unmarshal(b, &not)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Printf("register %s\n", err)
+		return
+	}
+	li := strings.LastIndex(r.RemoteAddr, ":")
+	c.tin <- fmt.Sprintf("%s:%d", r.RemoteAddr[:li], not.Metrics)
+	c.cin <- not.Addrs
+	log.Printf("registered %s\n", fmt.Sprintf("%s:%d", r.RemoteAddr[:li], not.Metrics))
+
+	http.HandlerFunc(c.listAddrs).ServeHTTP(w, r)
+}
+
+func (c *Client) listAddrs(w http.ResponseWriter, r *http.Request) {
+	addrs := <-c.cout
+	w.Write([]byte(strings.Join(addrs, "\n")))
+}
+
+func (c *Client) addrUpdater() {
+	var addrs []string
+	for {
+		select {
+		case as := <-c.cin:
+			for _, a := range as {
+				c.addrs[a] = time.Now()
+			}
+			for k, v := range c.addrs {
+				if v.Add(c.keepAlive).Before(time.Now()) {
+					delete(c.addrs, k)
+				}
+			}
+			addrs = addrs[:0]
+			for k := range c.addrs {
+				addrs = append(addrs, k)
+			}
+		case c.cout <- addrs:
 		}
-		w.WriteHeader(http.StatusOK)
-	})
-	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	}
+}
+func (c *Client) targetUpdater() {
+	for a := range c.tin {
+		var diff bool
+		if _, ok := c.targets[a]; !ok {
+			diff = true
+		}
+		c.targets[a] = time.Now()
+		for k, v := range c.targets {
+			if v.Add(c.keepAlive).Before(time.Now()) {
+				diff = true
+				delete(c.addrs, k)
+			}
+		}
+		if !diff {
+			continue
+		}
+		var svcs []Service
+		for k := range c.targets {
+			svcs = append(svcs, Service{
+				Targets: []string{k},
+			})
+		}
+
+		b, err := json.Marshal(svcs)
+		if err != nil {
+			log.Printf("marshal %s\n", err)
+			continue
+		}
+		err = ioutil.WriteFile(c.file, b, 0644)
+		if err != nil {
+			log.Printf("write %s\n", err)
+			continue
+		}
+	}
 }
 
-type ServiceDiscovery struct {
-	services []Service
-	file     string
+type Notification struct {
+	Metrics int
+	Addrs   []string
 }
-
-func (s *ServiceDiscovery) register(r io.Reader) error {
-	b, err := ioutil.ReadAll(r)
-	if err != nil {
-		return fmt.Errorf("register: read body %w", err)
-	}
-	log.Printf("watcher: received %s\n", b)
-	var svc Service
-	err = json.Unmarshal(b, &svc)
-	if err != nil {
-		return fmt.Errorf("register: unmarshal %w", err)
-	}
-	if len(svc.Targets) == 0 {
-		return fmt.Errorf("register: no targets")
-	}
-
-	s.services = append(s.services, svc)
-
-	log.Printf("watcher: registered %v", svc.Targets)
-	return writeSD(s.file, s.services)
-}
-
-// func (s *ServiceDiscovery) register(addr string, r io.Reader) error {
-// 	for _, service := range s.services {
-// 		for _, t := range service.Targets {
-// 			if t == addr {
-// 				return fmt.Errorf("register: duplicate addr %s", addr)
-// 			}
-// 		}
-// 	}
-//
-// 	b, err := ioutil.ReadAll(r)
-// 	if err != nil {
-// 		return fmt.Errorf("register: read body")
-// 	}
-// 	var m map[string]string
-// 	err = json.Unmarshal(b, &m)
-// 	if err != nil {
-// 		return fmt.Errorf("register unmarshal")
-// 	}
-//
-// 	s.services = append(s.services, Service{
-// 		Targets: []string{addr},
-// 		Labels:  m,
-// 	})
-// 	return writeSD(s.file, s.services)
-// }
 
 type Service struct {
-	Targets []string          `json:"targets"`
-	Labels  map[string]string `json:"labels"`
-}
-
-func readSD(file string) ([]Service, error) {
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, fmt.Errorf("readSD: read %w", err)
-	}
-	var svc []Service
-	err = json.Unmarshal(b, &svc)
-	if err != nil {
-		return nil, fmt.Errorf("readSD: unmarshal %w", err)
-	}
-	return svc, nil
-}
-
-func writeSD(file string, svc []Service) error {
-
-	b, err := json.Marshal(svc)
-	if err != nil {
-		return fmt.Errorf("writeSD: marshal %w", err)
-	}
-	err = ioutil.WriteFile(file, b, 0644)
-	if err != nil {
-		return fmt.Errorf("writeSD: write %w", err)
-	}
-	return nil
+	Targets []string          `json:"targets,omitempty"`
+	Labels  map[string]string `json:"labels,omitempty"`
 }

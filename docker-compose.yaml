@@ -54,8 +54,7 @@ services:
       - ./volumes/server1/ndn:/usr/local/etc/ndn
     depends_on:
       - prometheus
-    environment:
-      IPADDR: "172.18.0.11"
+    # environment:
   server2:
     container_name: server2
     build: ./ndn-server
@@ -74,8 +73,7 @@ services:
       - ./volumes/server2/ndn:/usr/local/etc/ndn
     depends_on:
       - prometheus
-    environment:
-      IPADDR: "172.18.0.12"
+    # environment:
 
   router1:
     container_name: router1
@@ -97,8 +95,7 @@ services:
       - ./volumes/router1/ndn:/usr/local/etc/ndn
     depends_on:
       - prometheus
-    environment:
-      IPADDR: "172.18.0.21"
+    # environment:
 
   client1:
     container_name: client1

@@ -13,7 +13,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/seankhliao/uva-rp1/management/api"
+	"github.com/seankhliao/uva-rp1/api"
 	"google.golang.org/grpc"
 )
 
@@ -190,7 +190,7 @@ func (s *Server) Serve() {
 	httpServer.Handle("/metrics", promhttp.Handler())
 
 	grpcServer := grpc.NewServer()
-	api.RegisterDiscoveryServiceServer(grpcServer, s)
+	// api.RegisterDiscoveryServiceServer(grpcServer, s)
 
 	http.ListenAndServe(fmt.Sprintf(":%d", s.port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {

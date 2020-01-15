@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/seankhliao/uva-rp1/management/sidecar"
+	"github.com/seankhliao/uva-rp1/sidecar"
 )
 
 func main() {

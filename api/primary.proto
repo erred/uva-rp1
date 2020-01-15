@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package api;
+
+/*
+ * Gossiping with other primaries
+ */
+service Gossip {
+  /* discover other load balancing clusters */
+  /* Only gossip about successfully connected ones */
+  rpc GossipClusters(stream Clusters) returns (stream Clusters) {}
+  /* discover other routes */
+  /* Only gossip about reachable routes */
+  rpc GossipRoutes(stream Routes) returns (stream Routes) {}
+
+}
+
+message Clusters {
+  repeated Cluster clusters = 1;
+}
+message Cluster {
+  string id = 1;
+  Endpoint primary = 2;
+}
+
+message Endpoint {
+  string scheme = 1;
+  string host = 2;
+  string port = 3;
+}
+
+message Routes {
+  repeated Route routes = 1;
+}
+message Route {
+  string prefix = 1;
+  int64 cost = 2;
+  Endpoint endpoint = 3;
+}
+
+/*
+ * Singe node info
+ */
+service Info {
+  /* discover channels  */
+  rpc Channels(ChannelRequest) returns (ChannelResponse) {}
+  /* discover the health endpoint for prometheus */
+  rpc Health(HealthRequest) returns (HealthResponse){}
+}
+
+message ChannelRequest {}
+message ChannelResponse {
+  repeated Endpoint endpoints = 1;
+}
+
+message HealthRequest {}
+message HealthResponse {
+  Endpoint endpoint = 1;
+}
+
+/*
+ * Cluster control
+ */
+service Control {
+  rpc RegisterSecondary(stream SecondaryInfo) returns (stream SecondaryControl) {}
+  rpc UnregisterSecondary(UnregisterRequest) returns (UnregisterResponse) {}
+}
+
+// SecondaryInfo is the current state of the secondary
+message SecondaryInfo {
+  string id = 1;
+  repeated Route routes = 2;
+
+  int64 cache_capacity = 3;
+  int64 cache_entries = 4;
+  int64 cache_hits = 5;
+  int64 cache_misses = 6;
+}
+
+// SecondaryControl is the desired state of the secondary
+message SecondaryControl {
+  repeated Route routes = 1;
+  int64 cache_capacity = 2;
+}
+
+message UnregisterRequest {
+  string id = 1;
+}
+message UnregisterResponse {}

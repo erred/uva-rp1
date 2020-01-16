@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -15,18 +14,25 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/seankhliao/uva-rp1/api"
+	"github.com/seankhliao/uva-rp1/nfdstat"
 	"google.golang.org/grpc"
 )
+
+type route struct {
+	prefix string
+	uri    string
+}
 
 type Secondary struct {
 	primary string
 	name    string
 
 	scrape time.Duration
-	faces  chan map[string]bool
-	routes chan map[string][]*url.URL
+	faces  chan map[int64]string
+	routes chan map[route]struct{}
 
 	client api.ControlClient
+	stat   *nfdstat.Server
 	log    *zerolog.Logger
 }
 
@@ -36,13 +42,15 @@ func New(args []string, logger *zerolog.Logger) *Secondary {
 	}
 
 	s := &Secondary{
-		log:    logger,
-		faces:  make(chan map[string]bool, 1),
-		routes: make(chan map[string][]*url.URL, 1),
+		faces:  make(chan map[int64]string, 1),
+		routes: make(chan map[route]struct{}, 1),
+
+		stat: nfdstat.New(logger),
+		log:  logger,
 	}
 
-	s.faces <- make(map[string]bool)
-	s.routes <- make(map[string][]*url.URL)
+	s.faces <- make(map[int64]string)
+	s.routes <- make(map[route]struct{})
 
 	fs := flag.NewFlagSet("secondary", flag.ExitOnError)
 	fs.StringVar(&s.primary, "primary", "145.100.104.117:8000", "host:port of primaary to connect to")
@@ -79,14 +87,9 @@ func (s *Secondary) Run(ctx context.Context) error {
 func (s *Secondary) handle(ctx context.Context, c api.Control_RegisterSecondaryClient) {
 	go func() {
 		for {
-			stat, err := status(ctx)
-			if err != nil {
-				log.Error().Err(err).Msg("status")
-				time.Sleep(s.scrape)
-				continue
-			}
+			_, stat := s.stat.Status()
 
-			err = c.Send(s.update(stat))
+			err := c.Send(s.update(stat))
 			if err != nil {
 				log.Error().Err(err).Msg("send")
 			}
@@ -102,45 +105,71 @@ func (s *Secondary) handle(ctx context.Context, c api.Control_RegisterSecondaryC
 			log.Error().Err(err).Msg("receive")
 			continue
 		}
-		_ = cm
-		panic("Unimplemented: apply controls")
+
+		// get copy of current state
+		mf := <-s.faces
+		// faces - count of routes
+		nmf := make(map[string]int, len(mf))
+		for _, v := range mf {
+			nmf[v] = 0
+		}
+		s.faces <- mf
+		mr := <-s.routes
+		// routes - set
+		nmr := make(map[route]struct{}, len(mr))
+		for k, v := range mr {
+			nmr[k] = v
+			nmf[k.uri]++
+		}
+		s.routes <- mr
+
+		for _, r := range cm.Routes {
+			rt := route{r.Prefix, r.Endpoint}
+			if _, ok := nmr[rt]; ok {
+				delete(nmr, rt)
+				nmf[r.Endpoint]--
+			} else {
+				if _, ok := nmf[r.Endpoint]; !ok {
+					s.AddFace(r.Endpoint)
+				}
+				s.AddRoute(rt, r.Cost)
+			}
+		}
+		for r := range nmr {
+			s.DelRoute(r)
+			nmf[r.uri]--
+		}
+		for f, c := range nmf {
+			if c <= 0 {
+				s.DelFace(f)
+			}
+		}
 	}
 }
 
-func (s *Secondary) update(stat *NFDStatus) *api.SecondaryInfo {
-	m := make(map[int64]*url.URL, len(stat.Faces.Face))
-	mf := make(map[string]bool, len(stat.Faces.Face))
+func (s *Secondary) update(stat *nfdstat.NFDStatus) *api.SecondaryInfo {
+	mf := make(map[int64]string, len(stat.Faces.Face))
 	<-s.faces
+	<-s.routes
 	for _, f := range stat.Faces.Face {
 		if !strings.HasPrefix(f.RemoteUri, "tcp") && !strings.HasPrefix(f.RemoteUri, "udp") {
 			continue
 		}
-		u, err := url.Parse(f.RemoteUri)
-		if err != nil {
-			continue
-		}
-		m[f.FaceId] = u
-		mf[f.RemoteUri] = true
+		mf[f.FaceId] = f.RemoteUri
 	}
-	s.faces <- mf
 
 	rs := make([]*api.Route, len(stat.Rib.RibEntry))
-	mr := make(map[string][]*url.URL, len(stat.Rib.RibEntry))
-	<-s.routes
+
+	mr := make(map[route]struct{}, len(stat.Rib.RibEntry))
 	for _, r := range stat.Rib.RibEntry {
-		if u, ok := m[r.Routes.Route.FaceId]; ok {
-			mr[r.Prefix] = append(mr[r.Prefix], u)
-			rs = append(rs, &api.Route{
-				Prefix: r.Prefix,
-				Cost:   r.Routes.Route.Cost,
-				Endpoint: &api.Endpoint{
-					Scheme: u.Scheme,
-					Host:   u.Hostname(),
-					Port:   u.Port(),
-				},
-			})
-		}
+		mr[route{r.Prefix, mf[r.Routes.Route.FaceId]}] = struct{}{}
+		rs = append(rs, &api.Route{
+			Prefix:   r.Prefix,
+			Endpoint: mf[r.Routes.Route.FaceId],
+			Cost:     r.Routes.Route.Cost,
+		})
 	}
+	s.faces <- mf
 	s.routes <- mr
 
 	return &api.SecondaryInfo{
@@ -153,15 +182,33 @@ func (s *Secondary) update(stat *NFDStatus) *api.SecondaryInfo {
 	}
 }
 
-func newsets(sc *api.SecondaryControl) (map[string]bool, map[string][]*url.URL) {
-	fs := make(map[string]bool)
-	rs := make(map[string][]*url.URL, len(sc.Routes))
-	for _, r := range sc.Routes {
-		fs[r.Endpoint.Scheme+"://"+r.Endpoint.Host+":"+r.Endpoint.Port] = true
-		rs[r.Prefix] = append(rs[r.Prefix], &url.URL{
-			Scheme: r.Endpoint.Scheme,
-			Host:   r.Endpoint.Host + ":" + r.Endpoint.Port,
-		})
+func (s *Secondary) AddFace(uri string) {
+	ctx := context.Background()
+	err := nfdstat.AddFace(ctx, uri)
+	if err != nil {
+		s.log.Error().Err(err).Str("uri", uri).Msg("add face")
 	}
-	return fs, rs
+}
+func (s *Secondary) DelFace(uri string) {
+	ctx := context.Background()
+	err := nfdstat.DelFace(ctx, uri)
+	if err != nil {
+		s.log.Error().Err(err).Str("uri", uri).Msg("delete face")
+	}
+}
+
+func (s *Secondary) AddRoute(r route, c int64) {
+	ctx := context.Background()
+	err := nfdstat.AddRoute(ctx, r.prefix, r.uri, c)
+	if err != nil {
+		s.log.Error().Err(err).Str("prefix", r.prefix).Str("uri", r.uri).Int64("cost", c).Msg("add route")
+	}
+}
+
+func (s *Secondary) DelRoute(r route) {
+	ctx := context.Background()
+	err := nfdstat.DelRoute(ctx, r.prefix, r.uri)
+	if err != nil {
+		s.log.Error().Err(err).Str("prefix", r.prefix).Str("uri", r.uri).Msg("delete route")
+	}
 }

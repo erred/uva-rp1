@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if ! ndnsec-get-default &>/dev/null
+then
+  ndnsec-keygen /localhost/operator | ndnsec-install-cert -
+fi
+
+conf=/etc/ndn/nfd.conf
+[ -f /usr/local/etc/ndn/nfd.conf ] && conf=/usr/local/etc/ndn/nfd.conf
+
+exec nfd -c ${conf} 2>&1

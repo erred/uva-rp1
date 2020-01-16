@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -8,6 +9,5 @@ import (
 )
 
 func main() {
-	log.SetPrefix("watcher | ")
-	watcher.NewServer(os.Args).Serve()
+	log.Fatal(watcher.New(os.Args, nil).Run(context.Background()))
 }

@@ -8,32 +8,26 @@ package api;
 service Gossip {
   /* discover other load balancing clusters */
   /* Only gossip about successfully connected ones */
-  rpc GossipClusters(stream Clusters) returns (stream Clusters) {}
-  /* discover other routes */
-  /* Only gossip about reachable routes */
-  rpc GossipRoutes(stream Routes) returns (stream Routes) {}
-
+  rpc GossipClusters(stream Cluster) returns (stream Clusters) {}
 }
 
 message Clusters {
-  repeated Cluster clusters = 1;
+  string id = 1;
+  repeated Cluster clusters = 2;
 }
 message Cluster {
   string id = 1;
   // uri of cluster primary
   string primary = 2;
+
+  repeated Route routes = 3;
 }
 
-message Routes {
-  repeated Route routes = 1;
-}
 message Route {
   string prefix = 1;
   // uri of cluster ingress
   string endpoint = 2;
   int64 cost = 3;
-  // id of cluster
-  string cluster = 4;
 }
 
 /*

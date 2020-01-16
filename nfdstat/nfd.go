@@ -44,3 +44,12 @@ func DelRoute(ctx context.Context, prefix, uri string) error {
 	}
 	return nil
 }
+
+func RouteStrategy(ctx context.Context, prefix, strategy string) error {
+	args := []string{"strategy", "set", "prefix", prefix, "strategy", strategy}
+	b, err := exec.CommandContext(ctx, "nfdc", args...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("RouteStrategy: %s: %w", b, err)
+	}
+	return nil
+}

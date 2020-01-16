@@ -5,4 +5,4 @@ WORKDIR /workspace
 COPY . .
 # RUN go build -trimpath -mod=vendor -o /bin/primary ./cmd/primary
 RUN go build -trimpath -mod=vendor -o /bin/secondary ./cmd/secondary
-# RUN go build -trimpath -mod=vendor -o /bin/watcher ./cmd/watcher
+RUN go build -trimpath -mod=vendor -o /bin/watcher ./cmd/watcher

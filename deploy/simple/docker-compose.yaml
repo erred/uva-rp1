@@ -18,6 +18,7 @@ services:
     networks:
       servers:
         ipv4_address: "172.20.0.2"
+
   primary1:
     container_name: primary1
     image: seankhliao/ndn-primary

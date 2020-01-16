@@ -73,12 +73,13 @@ func New(args []string, logger *zerolog.Logger) *Primary {
 	return p
 }
 
-func (p *Primary) Run(ctx context.Context) error {
-	// get local info
-	// go p.scraper()
+func (p *Primary) Run() error {
+	first := make(chan struct{})
+	go p.scraper(first)
+	<-first
 
 	// gossip with watcher
-	go p.gossipRunner(ctx)
+	go p.gossipRunner(context.Background())
 	go p.rebalancer()
 
 	// httpServer := http.ServeMux{}

@@ -20,7 +20,3 @@ func (p *Primary) Register(r *api.RegisterRequest, s api.Control_RegisterServer)
 	p.rebalance <- struct{}{}
 	return nil
 }
-
-// func (p *Primary) UnregisterSecondary(ctx context.Context, r *api.UnregisterRequest) (*api.UnregisterResponse, error) {
-// 	panic("Unimplemented: UnregisterSecondary")
-// }

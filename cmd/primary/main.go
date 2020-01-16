@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 
@@ -9,5 +8,5 @@ import (
 )
 
 func main() {
-	log.Fatal(primary.New(os.Args, nil).Run(context.Background()))
+	log.Fatal(primary.New(os.Args, nil).Run())
 }

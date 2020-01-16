@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (w *Watcher) GossipClusters(s api.Gossip_ClustersServer) error {
+func (w *Watcher) Clusters(s api.Gossip_ClustersServer) error {
 	// wait for hello
 	ci, err := s.Recv()
 	if err != nil {

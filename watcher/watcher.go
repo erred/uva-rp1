@@ -1,7 +1,6 @@
 package watcher
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"net/http"
@@ -18,10 +17,10 @@ import (
 type cluster struct {
 	c api.Cluster
 	t time.Time
-	s api.Gossip_GossipClustersServer
+	s api.Gossip_ClustersServer
 }
 
-func (c *cluster) send(cs *api.Clusters, log *zerolog.Logger) {
+func (c *cluster) send(cs *api.ClusterList, log *zerolog.Logger) {
 	err := c.s.Send(cs)
 	if err != nil {
 		log.Error().Err(err).Str("cluster", c.c.Id).Msg("send update")
@@ -56,7 +55,7 @@ func New(args []string, logger *zerolog.Logger) *Watcher {
 	return w
 }
 
-func (w *Watcher) Run(ctx context.Context) error {
+func (w *Watcher) Run() error {
 	grpcServer := grpc.NewServer()
 	api.RegisterGossipServer(grpcServer, w)
 

@@ -94,27 +94,22 @@ func (s *Secondary) handle(ctx context.Context) error {
 	defer conn.Close()
 
 	s.client = api.NewControlClient(conn)
-	c, err := s.client.RegisterSecondary(ctx)
+	c, err := s.client.Register(ctx, &api.RegisterRequest{
+		Id: s.name,
+	})
 	if err != nil {
 		return fmt.Errorf("register: %w", err)
 	}
-	_, stat := s.stat.Status()
 
-	// send initial
-	err = c.Send(s.update(stat))
-	if err != nil {
-		return fmt.Errorf("send: %w", err)
-	}
 	// respond to commands
 	for {
 		cm, err := c.Recv()
-		if errors.Is(err, io.EOF) {
-			log.Info().Msg("receive EOF")
-			return nil
-		} else if err != nil {
-			log.Error().Err(err).Msg("receive")
-			continue
+		if err != nil {
+			return fmt.Errorf("receive: %w", err)
 		}
+
+		_, stat := s.stat.Status()
+		s.update(stat)
 
 		// get copy of current state
 		mf := <-s.faces
@@ -141,6 +136,7 @@ func (s *Secondary) handle(ctx context.Context) error {
 				nmf[r.Endpoint]--
 			} else {
 				if _, ok := nmf[r.Endpoint]; !ok {
+					// TODO: test connection with primary first
 					s.AddFace(r.Endpoint)
 				}
 				s.AddRoute(rt, r.Cost)
@@ -155,17 +151,10 @@ func (s *Secondary) handle(ctx context.Context) error {
 				s.DelFace(f)
 			}
 		}
-
-		// send response
-		_, stat := s.stat.Status()
-		err = c.Send(s.update(stat))
-		if err != nil {
-			log.Error().Err(err).Msg("send")
-		}
 	}
 }
 
-func (s *Secondary) update(stat *nfdstat.NFDStatus) *api.SecondaryInfo {
+func (s *Secondary) update(stat *nfdstat.NFDStatus) {
 	mf := make(map[int64]string, len(stat.Faces.Face))
 	rs := make([]*api.Route, len(stat.Rib.RibEntry))
 	mr := make(map[route]struct{}, len(stat.Rib.RibEntry))
@@ -190,15 +179,6 @@ func (s *Secondary) update(stat *nfdstat.NFDStatus) *api.SecondaryInfo {
 
 	s.faces <- mf
 	s.routes <- mr
-
-	return &api.SecondaryInfo{
-		Id:            s.name,
-		Routes:        rs,
-		CacheCapacity: stat.Cs.Capacity,
-		CacheEntries:  stat.Cs.NEntries,
-		CacheHits:     stat.Cs.NHits,
-		CacheMisses:   stat.Cs.NMisses,
-	}
 }
 
 func (s *Secondary) AddFace(uri string) {

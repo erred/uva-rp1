@@ -2,74 +2,46 @@ syntax = "proto3";
 
 package api;
 
-/*
- * Gossiping with other primaries
- */
 service Gossip {
-  /* discover other load balancing clusters */
-  /* Only gossip about successfully connected ones */
-  rpc GossipClusters(stream Cluster) returns (stream Clusters) {}
+  rpc Clusters(stream Cluster) returns (stream ClusterList) {}
 }
 
-message Clusters {
+message ClusterList {
   string id = 1;
   repeated Cluster clusters = 2;
 }
 message Cluster {
   string id = 1;
-  // uri of cluster primary
   string primary = 2;
-
   repeated Route routes = 3;
 }
 
 message Route {
   string prefix = 1;
-  // uri of cluster ingress
   string endpoint = 2;
   int64 cost = 3;
 }
 
-/*
- * Singe node info
- */
-service Info {
-  /* discover channels  */
-  rpc Channels(ChannelRequest) returns (ChannelResponse) {}
+service Status {
+  rpc Channels(ChannelRequest) returns (ChannelResponse){}
+  rpc Stream(stream StatusRequest) returns (stream StatusResponse) {}
 }
 
 message ChannelRequest {}
 message ChannelResponse {
-  repeated string endpoints = 1;
+
+}
+message StatusRequest {}
+message StatusResponse {
+
 }
 
-/*
- * Cluster control
- */
 service Control {
-  rpc RegisterSecondary(stream SecondaryInfo) returns (stream SecondaryControl) {}
-  rpc UnregisterSecondary(UnregisterRequest) returns (UnregisterResponse) {}
+  rpc Register(RegisterRequest) returns (stream RegisterControl) {}
 }
-
-// SecondaryInfo is the current state of the secondary
-message SecondaryInfo {
+message RegisterRequest {
   string id = 1;
-  // only prefix and endpoint
-  repeated Route routes = 2;
-
-  int64 cache_capacity = 3;
-  int64 cache_entries = 4;
-  int64 cache_hits = 5;
-  int64 cache_misses = 6;
 }
-
-// SecondaryControl is the desired state of the secondary
-message SecondaryControl {
+message RegisterControl {
   repeated Route routes = 1;
-  int64 cache_capacity = 2;
 }
-
-message UnregisterRequest {
-  string id = 1;
-}
-message UnregisterResponse {}

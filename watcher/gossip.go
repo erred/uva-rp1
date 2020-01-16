@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (w *Watcher) GossipClusters(s api.Gossip_GossipClustersServer) error {
+func (w *Watcher) GossipClusters(s api.Gossip_ClustersServer) error {
 	// wait for hello
 	ci, err := s.Recv()
 	if err != nil {
@@ -26,7 +26,7 @@ func (w *Watcher) GossipClusters(s api.Gossip_GossipClustersServer) error {
 		ocs[ci.Id] = c
 
 		// create new clusters array
-		ncs := &api.Clusters{
+		ncs := &api.ClusterList{
 			Clusters: make([]*api.Cluster, 0, len(ocs)),
 		}
 		for _, v := range ocs {
@@ -51,7 +51,7 @@ func (w *Watcher) GossipClusters(s api.Gossip_GossipClustersServer) error {
 			return nil
 		} else if err != nil {
 			w.log.Error().Err(err).Str("cluster", cid).Msg("gossip receive")
-			continue
+			return err
 		}
 
 	}

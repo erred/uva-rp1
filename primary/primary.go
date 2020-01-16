@@ -2,38 +2,53 @@ package primary
 
 import (
 	"context"
+	"time"
 	// "errors"
 	"flag"
 	"fmt"
+
 	// "io"
 	"math/rand"
-	// "net/url"
 	"net/http"
 	"strconv"
 	"strings"
+
 	// "time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/seankhliao/uva-rp1/api"
 	"google.golang.org/grpc"
-	// "github.com/seankhliao/uva-rp1/api"
 	// "google.golang.org/grpc"
 )
 
+type endpoint struct {
+	uri  string
+	cost int64
+}
+
+type secondary struct {
+	s api.Control_RegisterServer
+	r map[string][]endpoint
+}
+
 type Primary struct {
-	name string
-	port int
+	name   string
+	port   int
+	scrape time.Duration
 
 	// watchers
+	watchers []string
+	watcher  api.Gossip_ClustersClient
 
-	// secondaries
-	// + route assignments
-	// + status
+	// prefix - cost
+	localRoutes  chan map[string]int64
+	localUris    chan []string
+	remoteRoutes chan map[string][]endpoint
 
-	// clusters
-
-	// routes
+	secondaries chan map[string]secondary
+	// notification
+	rebalance chan struct{}
 
 	log *zerolog.Logger
 }
@@ -47,33 +62,36 @@ func New(args []string, logger *zerolog.Logger) *Primary {
 		log: logger,
 	}
 
+	var watcher string
 	fs := flag.NewFlagSet("primary", flag.ExitOnError)
+	fs.DurationVar(&p.scrape, "scrape", 15*time.Second, "scrape interval")
+	fs.StringVar(&watcher, "watcher", "145.100.104.117:8000", "host:port of watcher to connect to")
 	fs.StringVar(&p.name, "name", strconv.FormatInt(rand.Int63(), 10), "overrdide randomly generated name of node")
 	fs.IntVar(&p.port, "port", 8000, "port to serve on")
 	fs.Parse(args)
+	p.watchers = strings.Split(watcher, ",")
 	return p
 }
 
 func (p *Primary) Run(ctx context.Context) error {
-	// ensure get first info
+	// get local info
+	// go p.scraper()
 
-	//  start route manager
-
-	// start gossip with watcher
+	// gossip with watcher
+	go p.gossipRunner(ctx)
+	go p.rebalancer()
 
 	// httpServer := http.ServeMux{}
 	// httpServer.Handle("/metrics", promhttp.Handler())
 	//
 	grpcServer := grpc.NewServer()
-	// api.RegisterGossipServer(grpcServer, p)
 	api.RegisterControlServer(grpcServer, p)
-	api.RegisterInfoServer(grpcServer, p)
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", p.port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
 			grpcServer.ServeHTTP(w, r)
-		} else {
-			panic("Unimplemented: Run")
+			// } else {
+			// 	panic("Unimplemented: Run")
 			// 		httpServer.ServeHTTP(w, r)
 		}
 	}))

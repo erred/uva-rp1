@@ -19,7 +19,9 @@ grafana:
 	docker build -t seankhliao/ndn-grafana deploy/grafana
 
 
-
+.PHONY: traffic
+traffic:
+	docker built -t seankhliao/ndn-traffic deploy/traffic
 .PHONY: secondary
 secondary: go nfd
 	docker build -t seankhliao/ndn-secondary deploy/secondary

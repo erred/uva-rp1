@@ -18,5 +18,11 @@ func (p *Primary) Register(r *api.RegisterRequest, s api.Control_RegisterServer)
 		r: make(map[string][]endpoint),
 	}
 	p.rebalance <- struct{}{}
+	go func(id string) {
+		<-s.Context().Done()
+		secs := <-p.secondaries
+		delete(secs, id)
+		p.secondaries <- secs
+	}(r.Id)
 	return nil
 }

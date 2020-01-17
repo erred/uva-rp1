@@ -3,136 +3,145 @@ package secondary
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/seankhliao/uva-rp1/api"
 	"github.com/seankhliao/uva-rp1/nfdstat"
 	"google.golang.org/grpc"
 )
 
-func (s *Secondary) handle(ctx context.Context) error {
-	// establish connection
-	conn, err := grpc.DialContext(ctx, s.primary, grpc.WithInsecure(), grpc.WithBlock())
+func (s *Secondary) recvCmd(c api.Info_RegisterClient) error {
+	rc, err := c.Recv()
 	if err != nil {
-		return fmt.Errorf("dial: %w", err)
-	}
-	defer conn.Close()
-
-	s.client = api.NewControlClient(conn)
-	c, err := s.client.Register(ctx, &api.RegisterRequest{
-		Id: s.name,
-	})
-	if err != nil {
-		return fmt.Errorf("register: %w", err)
+		return fmt.Errorf("recv: %w", err)
 	}
 
-	// respond to commands
-	for {
-		cm, err := c.Recv()
+	cp := make(map[string]primary, len(rc.Primaries))
+	for _, p := range rc.Primaries {
+		cp[p.PrimaryId] = primary{
+			*p, nil, "", nil,
+		}
+	}
+	var connect, disconnect []primary
+	op := <-s.primaries
+	for pid, p := range op {
+		if _, ok := cp[pid]; !ok {
+			disconnect = append(disconnect, p)
+		}
+	}
+	for pid, p := range cp {
+		if _, ok := op[pid]; !ok {
+			connect = append(connect, p)
+		}
+	}
+	s.primaries <- op
+	for _, p := range connect {
+		go s.connect(p)
+	}
+	for _, p := range disconnect {
+		go s.disconnect(p)
+	}
+	return nil
+}
+
+func (s *Secondary) disconnect(p primary) {
+	pr := <-s.primaries
+	delete(pr, p.p.PrimaryId)
+	s.primaries <- pr
+
+	p.conn.Close()
+
+	ctx := context.Background()
+	err := nfdstat.DelFace(ctx, p.ch)
+	if err != nil {
+		s.log.Error().Err(err).Str("id", p.p.PrimaryId).Msg("disconnect del")
+	}
+}
+
+func (s *Secondary) connect(p primary) {
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, p.p.Endpoint, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		s.log.Error().Err(err).Str("id", p.p.PrimaryId).Str("endpoint", p.p.Endpoint).Msg("connect primary")
+		return
+	}
+	p.conn = conn
+	p.c = api.NewInfoClient(conn)
+
+	cr, err := p.c.Channels(ctx, &api.ChannelRequest{})
+	if err != nil {
+		s.log.Error().Err(err).Str("id", p.p.PrimaryId).Str("endpoint", p.p.Endpoint).Msg("primary channels")
+		p.conn.Close()
+		return
+	}
+	rtc, err := p.c.Routes(ctx, &api.RouteRequest{})
+	if err != nil {
+		s.log.Error().Err(err).Str("id", p.p.PrimaryId).Str("endpoint", p.p.Endpoint).Msg("primary routes")
+		p.conn.Close()
+		return
+	}
+
+	for _, ch := range cr.Channels {
+		err = nfdstat.AddFace(ctx, ch)
 		if err != nil {
-			return fmt.Errorf("receive: %w", err)
+			s.log.Error().Err(err).Str("id", p.p.PrimaryId).Str("endpoint", p.p.Endpoint).Str("channel", ch).Msg("primary face")
+		} else {
+			p.ch = ch
+			break
+		}
+	}
+	if p.ch == "" {
+		s.log.Error().Str("id", p.p.PrimaryId).Str("endpoint", p.p.Endpoint).Msg("primary no channels")
+		p.conn.Close()
+		return
+	}
+
+	go s.routeUpdater(p.p.PrimaryId, p.ch, rtc)
+
+	pr := <-s.primaries
+	pr[p.p.PrimaryId] = p
+	s.primaries <- pr
+}
+
+func (s *Secondary) routeUpdater(id, ch string, c api.Info_RoutesClient) {
+	ctx := context.Background()
+	rts := make(map[string]int64)
+	for {
+		rt, err := c.Recv()
+		if err != nil {
+			s.log.Error().Err(err).Str("id", id).Msg("routeUpdater recv")
+			return
+		}
+		nrts := make(map[string]int64, len(rt.Routes))
+		for _, r := range rt.Routes {
+			nrts[r.Prefix] = r.Cost
 		}
 
-		_, stat := s.stat.Status()
-		s.update(stat)
-
-		// get copy of current state
-		mf := <-s.faces
-		// faces - count of routes
-		nmf := make(map[string]int, len(mf))
-		for _, v := range mf {
-			nmf[v] = 0
-		}
-		s.faces <- mf
-		mr := <-s.routes
-		// routes - set
-		nmr := make(map[route]struct{}, len(mr))
-		for k, v := range mr {
-			nmr[k] = v
-			nmf[k.uri]++
-		}
-		s.routes <- mr
-
-		// filter face/route changes
-		for _, r := range cm.Routes {
-			rt := route{r.Prefix, r.Endpoint}
-			if _, ok := nmr[rt]; ok {
-				delete(nmr, rt)
-				nmf[r.Endpoint]--
-			} else {
-				if _, ok := nmf[r.Endpoint]; !ok {
-					// TODO: test connection with primary first
-					s.AddFace(r.Endpoint)
-				}
-				s.AddRoute(rt, r.Cost)
+		var connect, disconnect []string
+		for r := range rts {
+			if _, ok := nrts[r]; !ok {
+				disconnect = append(disconnect, r)
 			}
 		}
-		for r := range nmr {
-			s.DelRoute(r)
-			nmf[r.uri]--
-		}
-		for f, c := range nmf {
-			if c <= 0 {
-				s.DelFace(f)
+		for r := range nrts {
+			if _, ok := rts[r]; !ok {
+				connect = append(connect, r)
 			}
 		}
-	}
-}
 
-func (s *Secondary) update(stat *nfdstat.NFDStatus) {
-	mf := make(map[int64]string, len(stat.Faces.Face))
-	rs := make([]*api.Route, len(stat.Rib.RibEntry))
-	mr := make(map[route]struct{}, len(stat.Rib.RibEntry))
-
-	<-s.faces
-	<-s.routes
-
-	for _, f := range stat.Faces.Face {
-		if !strings.HasPrefix(f.RemoteUri, "tcp") && !strings.HasPrefix(f.RemoteUri, "udp") {
-			continue
+		for _, r := range connect {
+			err = nfdstat.AddRoute(ctx, r, ch, nrts[r])
+			if err != nil {
+				s.log.Error().Err(err).Str("id", id).Str("chan", ch).Str("prefix", r).Msg("routeUpdater add")
+				continue
+			}
+			rts[r] = nrts[r]
 		}
-		mf[f.FaceId] = f.RemoteUri
-	}
-	for _, r := range stat.Rib.RibEntry {
-		mr[route{r.Prefix, mf[r.Routes.Route.FaceId]}] = struct{}{}
-		rs = append(rs, &api.Route{
-			Prefix:   r.Prefix,
-			Endpoint: mf[r.Routes.Route.FaceId],
-			Cost:     r.Routes.Route.Cost,
-		})
-	}
-
-	s.faces <- mf
-	s.routes <- mr
-}
-
-func (s *Secondary) AddFace(uri string) {
-	err := nfdstat.AddFace(context.Background(), uri)
-	if err != nil {
-		s.log.Error().Err(err).Str("uri", uri).Msg("add face")
-	}
-}
-func (s *Secondary) DelFace(uri string) {
-	err := nfdstat.DelFace(context.Background(), uri)
-	if err != nil {
-		s.log.Error().Err(err).Str("uri", uri).Msg("delete face")
-	}
-}
-
-func (s *Secondary) AddRoute(r route, c int64) {
-	err := nfdstat.AddRoute(context.Background(), r.prefix, r.uri, c)
-	if err != nil {
-		s.log.Error().Err(err).Str("prefix", r.prefix).Str("uri", r.uri).Int64("cost", c).Msg("add route")
-	}
-	// err = nfdstat.RouteStrategy(ctx, r.prefix, s.strategy)
-	// if err != nil {
-	// 	s.log.Error().Err(err).Str("prefix", r.prefix).Str("strategy", s.strategy).Msg("set strategy")
-	// }
-}
-
-func (s *Secondary) DelRoute(r route) {
-	err := nfdstat.DelRoute(context.Background(), r.prefix, r.uri)
-	if err != nil {
-		s.log.Error().Err(err).Str("prefix", r.prefix).Str("uri", r.uri).Msg("delete route")
+		for _, r := range disconnect {
+			err = nfdstat.DelRoute(ctx, r, ch)
+			if err != nil {
+				s.log.Error().Err(err).Str("id", id).Str("chan", ch).Str("prefix", r).Msg("routeUpdater del")
+			}
+			delete(rts, r)
+		}
 	}
 }

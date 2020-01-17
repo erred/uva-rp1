@@ -28,6 +28,10 @@ func (p *Primary) gossip(ctx context.Context, watcher string) error {
 	}
 
 	p.watcher = c
+	go func() {
+		<-c.Context().Done()
+		p.watcher = nil
+	}()
 	for {
 		cs, err := c.Recv()
 		if err != nil {
@@ -63,10 +67,9 @@ func (p *Primary) gossipRunner(ctx context.Context) {
 }
 
 func (p *Primary) getLocCluster() *api.Cluster {
-	uris := <-p.localUris
+	uris := p.localUris
 	urs := make([]string, len(uris))
 	copy(urs, uris)
-	p.localUris <- uris
 
 	loc := <-p.localRoutes
 	rs := make([]*api.Route, 0, len(loc)*len(urs))
@@ -82,7 +85,9 @@ func (p *Primary) getLocCluster() *api.Cluster {
 	p.localRoutes <- loc
 
 	return &api.Cluster{
-		Id:     p.name,
-		Routes: rs,
+		Id: p.name,
+		// TODO: find local endpoint uri
+		Primary: p.localUris[0] + ":" + p.port,
+		Routes:  rs,
 	}
 }

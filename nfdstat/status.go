@@ -5,59 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"os/exec"
-	"strconv"
 )
-
-func (s *Server) Status() (int64, *NFDStatus) {
-	ctx := context.Background()
-
-	mem, err := memory(s.nfdpid, s.pagesize)
-	if err != nil {
-		s.log.Error().Err(err).Msg("nfd memory")
-	} else {
-		s.memory.Set(float64(mem))
-	}
-
-	status, err := getStatus(ctx)
-	if err != nil {
-		s.log.Error().Err(err).Msg("nfd status")
-		return 0, nil
-	}
-
-	s.cs_capacity.Set(float64(status.Cs.Capacity))
-	s.cs_entries.Set(float64(status.Cs.NEntries))
-	s.cs_hits.Set(float64(status.Cs.NHits))
-	s.cs_misses.Set(float64(status.Cs.NMisses))
-	s.nt_entries.Set(float64(status.GeneralStatus.NNameTreeEntries))
-	s.fib_entries.Set(float64(status.GeneralStatus.NFibEntries))
-	s.rib_entries.Set(float64(len(status.Rib.RibEntry)))
-	s.pit_entries.Set(float64(status.GeneralStatus.NPitEntries))
-	s.channel_entries.Set(float64(len(status.Channels.Channel)))
-	s.face_entries.Set(float64(len(status.Faces.Face)))
-
-	s.interests.WithLabelValues("yes").Set(float64(status.GeneralStatus.NSatisfiedInterests))
-	s.interests.WithLabelValues("no").Set(float64(status.GeneralStatus.NUnsatisfiedInterests))
-
-	s.pkts.WithLabelValues("in", "interest").Set(float64(status.GeneralStatus.PacketCounters.IncomingPackets.NInterests))
-	s.pkts.WithLabelValues("in", "data").Set(float64(status.GeneralStatus.PacketCounters.IncomingPackets.NData))
-	s.pkts.WithLabelValues("in", "nack").Set(float64(status.GeneralStatus.PacketCounters.IncomingPackets.NNacks))
-	s.pkts.WithLabelValues("out", "interest").Set(float64(status.GeneralStatus.PacketCounters.OutgoingPackets.NInterests))
-	s.pkts.WithLabelValues("out", "data").Set(float64(status.GeneralStatus.PacketCounters.OutgoingPackets.NData))
-	s.pkts.WithLabelValues("out", "nack").Set(float64(status.GeneralStatus.PacketCounters.OutgoingPackets.NNacks))
-
-	for _, f := range status.Faces.Face {
-		s.face_bytes.WithLabelValues("in", strconv.FormatInt(f.FaceId, 10)).Set(float64(f.ByteCounters.IncomingBytes))
-		s.face_bytes.WithLabelValues("out", strconv.FormatInt(f.FaceId, 10)).Set(float64(f.ByteCounters.OutgoingBytes))
-
-		s.face_pkts.WithLabelValues("in", "interest", strconv.FormatInt(f.FaceId, 10)).Set(float64(f.PacketCounters.IncomingPackets.NInterests))
-		s.face_pkts.WithLabelValues("in", "data", strconv.FormatInt(f.FaceId, 10)).Set(float64(f.PacketCounters.IncomingPackets.NData))
-		s.face_pkts.WithLabelValues("in", "nack", strconv.FormatInt(f.FaceId, 10)).Set(float64(f.PacketCounters.IncomingPackets.NNacks))
-		s.face_pkts.WithLabelValues("out", "interest", strconv.FormatInt(f.FaceId, 10)).Set(float64(f.PacketCounters.OutgoingPackets.NInterests))
-		s.face_pkts.WithLabelValues("out", "data", strconv.FormatInt(f.FaceId, 10)).Set(float64(f.PacketCounters.OutgoingPackets.NData))
-		s.face_pkts.WithLabelValues("out", "nack", strconv.FormatInt(f.FaceId, 10)).Set(float64(f.PacketCounters.OutgoingPackets.NNacks))
-	}
-	return mem, status
-}
 
 func getStatus(ctx context.Context) (*NFDStatus, error) {
 	b, err := exec.CommandContext(ctx, "nfdc", "status", "report", "xml").CombinedOutput()

@@ -7,12 +7,13 @@ import (
 )
 
 func (w *Watcher) SavePromSD() error {
-	cs := <-w.clusters
-	sd := make([]prometheusService, 0, len(cs))
-	for k, v := range cs {
+	ap := w.allPrimaries()
+
+	sd := make([]prometheusService, 0, len(ap.Primaries))
+	for _, p := range ap.Primaries {
 		sd = append(sd, prometheusService{
-			Targets: []string{v.c.Primary},
-			Labels:  map[string]string{"clusterid": k},
+			Targets: []string{p.Endpoint},
+			Labels:  map[string]string{"primary_id": p.PrimaryId},
 		})
 	}
 	b, err := json.Marshal(sd)

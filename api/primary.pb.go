@@ -24,111 +24,244 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type ClusterList struct {
-	Id                   string     `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Clusters             []*Cluster `protobuf:"bytes,2,rep,name=clusters,proto3" json:"clusters,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
-	XXX_unrecognized     []byte     `json:"-"`
-	XXX_sizecache        int32      `json:"-"`
-}
-
-func (m *ClusterList) Reset()         { *m = ClusterList{} }
-func (m *ClusterList) String() string { return proto.CompactTextString(m) }
-func (*ClusterList) ProtoMessage()    {}
-func (*ClusterList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_92d653641ecf6225, []int{0}
-}
-
-func (m *ClusterList) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ClusterList.Unmarshal(m, b)
-}
-func (m *ClusterList) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ClusterList.Marshal(b, m, deterministic)
-}
-func (m *ClusterList) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClusterList.Merge(m, src)
-}
-func (m *ClusterList) XXX_Size() int {
-	return xxx_messageInfo_ClusterList.Size(m)
-}
-func (m *ClusterList) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClusterList.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ClusterList proto.InternalMessageInfo
-
-func (m *ClusterList) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *ClusterList) GetClusters() []*Cluster {
-	if m != nil {
-		return m.Clusters
-	}
-	return nil
-}
-
-type Cluster struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Primary              string   `protobuf:"bytes,2,opt,name=primary,proto3" json:"primary,omitempty"`
-	Routes               []*Route `protobuf:"bytes,3,rep,name=routes,proto3" json:"routes,omitempty"`
+type Primary struct {
+	PrimaryId string `protobuf:"bytes,1,opt,name=primary_id,json=primaryId,proto3" json:"primary_id,omitempty"`
+	// primary: host:port
+	Endpoint             string   `protobuf:"bytes,2,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Cluster) Reset()         { *m = Cluster{} }
-func (m *Cluster) String() string { return proto.CompactTextString(m) }
-func (*Cluster) ProtoMessage()    {}
-func (*Cluster) Descriptor() ([]byte, []int) {
+func (m *Primary) Reset()         { *m = Primary{} }
+func (m *Primary) String() string { return proto.CompactTextString(m) }
+func (*Primary) ProtoMessage()    {}
+func (*Primary) Descriptor() ([]byte, []int) {
+	return fileDescriptor_92d653641ecf6225, []int{0}
+}
+
+func (m *Primary) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Primary.Unmarshal(m, b)
+}
+func (m *Primary) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Primary.Marshal(b, m, deterministic)
+}
+func (m *Primary) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Primary.Merge(m, src)
+}
+func (m *Primary) XXX_Size() int {
+	return xxx_messageInfo_Primary.Size(m)
+}
+func (m *Primary) XXX_DiscardUnknown() {
+	xxx_messageInfo_Primary.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Primary proto.InternalMessageInfo
+
+func (m *Primary) GetPrimaryId() string {
+	if m != nil {
+		return m.PrimaryId
+	}
+	return ""
+}
+
+func (m *Primary) GetEndpoint() string {
+	if m != nil {
+		return m.Endpoint
+	}
+	return ""
+}
+
+type AllPrimaries struct {
+	WatcherId            string     `protobuf:"bytes,1,opt,name=watcher_id,json=watcherId,proto3" json:"watcher_id,omitempty"`
+	Primaries            []*Primary `protobuf:"bytes,2,rep,name=primaries,proto3" json:"primaries,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *AllPrimaries) Reset()         { *m = AllPrimaries{} }
+func (m *AllPrimaries) String() string { return proto.CompactTextString(m) }
+func (*AllPrimaries) ProtoMessage()    {}
+func (*AllPrimaries) Descriptor() ([]byte, []int) {
 	return fileDescriptor_92d653641ecf6225, []int{1}
 }
 
-func (m *Cluster) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Cluster.Unmarshal(m, b)
+func (m *AllPrimaries) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AllPrimaries.Unmarshal(m, b)
 }
-func (m *Cluster) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Cluster.Marshal(b, m, deterministic)
+func (m *AllPrimaries) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AllPrimaries.Marshal(b, m, deterministic)
 }
-func (m *Cluster) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Cluster.Merge(m, src)
+func (m *AllPrimaries) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllPrimaries.Merge(m, src)
 }
-func (m *Cluster) XXX_Size() int {
-	return xxx_messageInfo_Cluster.Size(m)
+func (m *AllPrimaries) XXX_Size() int {
+	return xxx_messageInfo_AllPrimaries.Size(m)
 }
-func (m *Cluster) XXX_DiscardUnknown() {
-	xxx_messageInfo_Cluster.DiscardUnknown(m)
+func (m *AllPrimaries) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllPrimaries.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Cluster proto.InternalMessageInfo
+var xxx_messageInfo_AllPrimaries proto.InternalMessageInfo
 
-func (m *Cluster) GetId() string {
+func (m *AllPrimaries) GetWatcherId() string {
 	if m != nil {
-		return m.Id
+		return m.WatcherId
 	}
 	return ""
 }
 
-func (m *Cluster) GetPrimary() string {
+func (m *AllPrimaries) GetPrimaries() []*Primary {
 	if m != nil {
-		return m.Primary
+		return m.Primaries
+	}
+	return nil
+}
+
+type IdentityRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *IdentityRequest) Reset()         { *m = IdentityRequest{} }
+func (m *IdentityRequest) String() string { return proto.CompactTextString(m) }
+func (*IdentityRequest) ProtoMessage()    {}
+func (*IdentityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_92d653641ecf6225, []int{2}
+}
+
+func (m *IdentityRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_IdentityRequest.Unmarshal(m, b)
+}
+func (m *IdentityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_IdentityRequest.Marshal(b, m, deterministic)
+}
+func (m *IdentityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IdentityRequest.Merge(m, src)
+}
+func (m *IdentityRequest) XXX_Size() int {
+	return xxx_messageInfo_IdentityRequest.Size(m)
+}
+func (m *IdentityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_IdentityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_IdentityRequest proto.InternalMessageInfo
+
+type IdentityResponse struct {
+	PrimaryId            string   `protobuf:"bytes,1,opt,name=primary_id,json=primaryId,proto3" json:"primary_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *IdentityResponse) Reset()         { *m = IdentityResponse{} }
+func (m *IdentityResponse) String() string { return proto.CompactTextString(m) }
+func (*IdentityResponse) ProtoMessage()    {}
+func (*IdentityResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_92d653641ecf6225, []int{3}
+}
+
+func (m *IdentityResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_IdentityResponse.Unmarshal(m, b)
+}
+func (m *IdentityResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_IdentityResponse.Marshal(b, m, deterministic)
+}
+func (m *IdentityResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IdentityResponse.Merge(m, src)
+}
+func (m *IdentityResponse) XXX_Size() int {
+	return xxx_messageInfo_IdentityResponse.Size(m)
+}
+func (m *IdentityResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_IdentityResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_IdentityResponse proto.InternalMessageInfo
+
+func (m *IdentityResponse) GetPrimaryId() string {
+	if m != nil {
+		return m.PrimaryId
 	}
 	return ""
 }
 
-func (m *Cluster) GetRoutes() []*Route {
+type ChannelRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ChannelRequest) Reset()         { *m = ChannelRequest{} }
+func (m *ChannelRequest) String() string { return proto.CompactTextString(m) }
+func (*ChannelRequest) ProtoMessage()    {}
+func (*ChannelRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_92d653641ecf6225, []int{4}
+}
+
+func (m *ChannelRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ChannelRequest.Unmarshal(m, b)
+}
+func (m *ChannelRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ChannelRequest.Marshal(b, m, deterministic)
+}
+func (m *ChannelRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ChannelRequest.Merge(m, src)
+}
+func (m *ChannelRequest) XXX_Size() int {
+	return xxx_messageInfo_ChannelRequest.Size(m)
+}
+func (m *ChannelRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ChannelRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ChannelRequest proto.InternalMessageInfo
+
+type ChannelResponse struct {
+	// nfd: scheme://host:port
+	Channels             []string `protobuf:"bytes,1,rep,name=channels,proto3" json:"channels,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ChannelResponse) Reset()         { *m = ChannelResponse{} }
+func (m *ChannelResponse) String() string { return proto.CompactTextString(m) }
+func (*ChannelResponse) ProtoMessage()    {}
+func (*ChannelResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_92d653641ecf6225, []int{5}
+}
+
+func (m *ChannelResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ChannelResponse.Unmarshal(m, b)
+}
+func (m *ChannelResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ChannelResponse.Marshal(b, m, deterministic)
+}
+func (m *ChannelResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ChannelResponse.Merge(m, src)
+}
+func (m *ChannelResponse) XXX_Size() int {
+	return xxx_messageInfo_ChannelResponse.Size(m)
+}
+func (m *ChannelResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ChannelResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ChannelResponse proto.InternalMessageInfo
+
+func (m *ChannelResponse) GetChannels() []string {
 	if m != nil {
-		return m.Routes
+		return m.Channels
 	}
 	return nil
 }
 
 type Route struct {
 	Prefix               string   `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	Endpoint             string   `protobuf:"bytes,2,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
 	Cost                 int64    `protobuf:"varint,3,opt,name=cost,proto3" json:"cost,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -139,7 +272,7 @@ func (m *Route) Reset()         { *m = Route{} }
 func (m *Route) String() string { return proto.CompactTextString(m) }
 func (*Route) ProtoMessage()    {}
 func (*Route) Descriptor() ([]byte, []int) {
-	return fileDescriptor_92d653641ecf6225, []int{2}
+	return fileDescriptor_92d653641ecf6225, []int{6}
 }
 
 func (m *Route) XXX_Unmarshal(b []byte) error {
@@ -167,13 +300,6 @@ func (m *Route) GetPrefix() string {
 	return ""
 }
 
-func (m *Route) GetEndpoint() string {
-	if m != nil {
-		return m.Endpoint
-	}
-	return ""
-}
-
 func (m *Route) GetCost() int64 {
 	if m != nil {
 		return m.Cost
@@ -181,67 +307,75 @@ func (m *Route) GetCost() int64 {
 	return 0
 }
 
-type ChannelRequest struct {
+type RouteRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ChannelRequest) Reset()         { *m = ChannelRequest{} }
-func (m *ChannelRequest) String() string { return proto.CompactTextString(m) }
-func (*ChannelRequest) ProtoMessage()    {}
-func (*ChannelRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_92d653641ecf6225, []int{3}
+func (m *RouteRequest) Reset()         { *m = RouteRequest{} }
+func (m *RouteRequest) String() string { return proto.CompactTextString(m) }
+func (*RouteRequest) ProtoMessage()    {}
+func (*RouteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_92d653641ecf6225, []int{7}
 }
 
-func (m *ChannelRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ChannelRequest.Unmarshal(m, b)
+func (m *RouteRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RouteRequest.Unmarshal(m, b)
 }
-func (m *ChannelRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ChannelRequest.Marshal(b, m, deterministic)
+func (m *RouteRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RouteRequest.Marshal(b, m, deterministic)
 }
-func (m *ChannelRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ChannelRequest.Merge(m, src)
+func (m *RouteRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RouteRequest.Merge(m, src)
 }
-func (m *ChannelRequest) XXX_Size() int {
-	return xxx_messageInfo_ChannelRequest.Size(m)
+func (m *RouteRequest) XXX_Size() int {
+	return xxx_messageInfo_RouteRequest.Size(m)
 }
-func (m *ChannelRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ChannelRequest.DiscardUnknown(m)
+func (m *RouteRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RouteRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ChannelRequest proto.InternalMessageInfo
+var xxx_messageInfo_RouteRequest proto.InternalMessageInfo
 
-type ChannelResponse struct {
+type RouteResponse struct {
+	Routes               []*Route `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ChannelResponse) Reset()         { *m = ChannelResponse{} }
-func (m *ChannelResponse) String() string { return proto.CompactTextString(m) }
-func (*ChannelResponse) ProtoMessage()    {}
-func (*ChannelResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_92d653641ecf6225, []int{4}
+func (m *RouteResponse) Reset()         { *m = RouteResponse{} }
+func (m *RouteResponse) String() string { return proto.CompactTextString(m) }
+func (*RouteResponse) ProtoMessage()    {}
+func (*RouteResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_92d653641ecf6225, []int{8}
 }
 
-func (m *ChannelResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ChannelResponse.Unmarshal(m, b)
+func (m *RouteResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RouteResponse.Unmarshal(m, b)
 }
-func (m *ChannelResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ChannelResponse.Marshal(b, m, deterministic)
+func (m *RouteResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RouteResponse.Marshal(b, m, deterministic)
 }
-func (m *ChannelResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ChannelResponse.Merge(m, src)
+func (m *RouteResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RouteResponse.Merge(m, src)
 }
-func (m *ChannelResponse) XXX_Size() int {
-	return xxx_messageInfo_ChannelResponse.Size(m)
+func (m *RouteResponse) XXX_Size() int {
+	return xxx_messageInfo_RouteResponse.Size(m)
 }
-func (m *ChannelResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ChannelResponse.DiscardUnknown(m)
+func (m *RouteResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RouteResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ChannelResponse proto.InternalMessageInfo
+var xxx_messageInfo_RouteResponse proto.InternalMessageInfo
+
+func (m *RouteResponse) GetRoutes() []*Route {
+	if m != nil {
+		return m.Routes
+	}
+	return nil
+}
 
 type StatusRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -253,7 +387,7 @@ func (m *StatusRequest) Reset()         { *m = StatusRequest{} }
 func (m *StatusRequest) String() string { return proto.CompactTextString(m) }
 func (*StatusRequest) ProtoMessage()    {}
 func (*StatusRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_92d653641ecf6225, []int{5}
+	return fileDescriptor_92d653641ecf6225, []int{9}
 }
 
 func (m *StatusRequest) XXX_Unmarshal(b []byte) error {
@@ -275,6 +409,26 @@ func (m *StatusRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_StatusRequest proto.InternalMessageInfo
 
 type StatusResponse struct {
+	Memory               int64    `protobuf:"varint,1,opt,name=memory,proto3" json:"memory,omitempty"`
+	CsCapacity           int64    `protobuf:"varint,2,opt,name=cs_capacity,json=csCapacity,proto3" json:"cs_capacity,omitempty"`
+	CsEntries            int64    `protobuf:"varint,3,opt,name=cs_entries,json=csEntries,proto3" json:"cs_entries,omitempty"`
+	CsHits               int64    `protobuf:"varint,4,opt,name=cs_hits,json=csHits,proto3" json:"cs_hits,omitempty"`
+	CsMisses             int64    `protobuf:"varint,5,opt,name=cs_misses,json=csMisses,proto3" json:"cs_misses,omitempty"`
+	FibEntries           int64    `protobuf:"varint,6,opt,name=fib_entries,json=fibEntries,proto3" json:"fib_entries,omitempty"`
+	RibEntries           int64    `protobuf:"varint,7,opt,name=rib_entries,json=ribEntries,proto3" json:"rib_entries,omitempty"`
+	PitEntries           int64    `protobuf:"varint,8,opt,name=pit_entries,json=pitEntries,proto3" json:"pit_entries,omitempty"`
+	ChanEntries          int64    `protobuf:"varint,9,opt,name=chan_entries,json=chanEntries,proto3" json:"chan_entries,omitempty"`
+	FaceEntries          int64    `protobuf:"varint,10,opt,name=face_entries,json=faceEntries,proto3" json:"face_entries,omitempty"`
+	IntSatisifed         int64    `protobuf:"varint,11,opt,name=int_satisifed,json=intSatisifed,proto3" json:"int_satisifed,omitempty"`
+	IntUnsatisfied       int64    `protobuf:"varint,12,opt,name=int_unsatisfied,json=intUnsatisfied,proto3" json:"int_unsatisfied,omitempty"`
+	PktInInt             int64    `protobuf:"varint,13,opt,name=pkt_in_int,json=pktInInt,proto3" json:"pkt_in_int,omitempty"`
+	PktInData            int64    `protobuf:"varint,14,opt,name=pkt_in_data,json=pktInData,proto3" json:"pkt_in_data,omitempty"`
+	PktInNack            int64    `protobuf:"varint,15,opt,name=pkt_in_nack,json=pktInNack,proto3" json:"pkt_in_nack,omitempty"`
+	PktOutInt            int64    `protobuf:"varint,16,opt,name=pkt_out_int,json=pktOutInt,proto3" json:"pkt_out_int,omitempty"`
+	PktOutData           int64    `protobuf:"varint,17,opt,name=pkt_out_data,json=pktOutData,proto3" json:"pkt_out_data,omitempty"`
+	PktOutNack           int64    `protobuf:"varint,18,opt,name=pkt_out_nack,json=pktOutNack,proto3" json:"pkt_out_nack,omitempty"`
+	BytesIn              int64    `protobuf:"varint,19,opt,name=bytes_in,json=bytesIn,proto3" json:"bytes_in,omitempty"`
+	BytesOut             int64    `protobuf:"varint,20,opt,name=bytes_out,json=bytesOut,proto3" json:"bytes_out,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -284,7 +438,7 @@ func (m *StatusResponse) Reset()         { *m = StatusResponse{} }
 func (m *StatusResponse) String() string { return proto.CompactTextString(m) }
 func (*StatusResponse) ProtoMessage()    {}
 func (*StatusResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_92d653641ecf6225, []int{6}
+	return fileDescriptor_92d653641ecf6225, []int{10}
 }
 
 func (m *StatusResponse) XXX_Unmarshal(b []byte) error {
@@ -305,8 +459,148 @@ func (m *StatusResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StatusResponse proto.InternalMessageInfo
 
+func (m *StatusResponse) GetMemory() int64 {
+	if m != nil {
+		return m.Memory
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetCsCapacity() int64 {
+	if m != nil {
+		return m.CsCapacity
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetCsEntries() int64 {
+	if m != nil {
+		return m.CsEntries
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetCsHits() int64 {
+	if m != nil {
+		return m.CsHits
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetCsMisses() int64 {
+	if m != nil {
+		return m.CsMisses
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetFibEntries() int64 {
+	if m != nil {
+		return m.FibEntries
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetRibEntries() int64 {
+	if m != nil {
+		return m.RibEntries
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetPitEntries() int64 {
+	if m != nil {
+		return m.PitEntries
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetChanEntries() int64 {
+	if m != nil {
+		return m.ChanEntries
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetFaceEntries() int64 {
+	if m != nil {
+		return m.FaceEntries
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetIntSatisifed() int64 {
+	if m != nil {
+		return m.IntSatisifed
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetIntUnsatisfied() int64 {
+	if m != nil {
+		return m.IntUnsatisfied
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetPktInInt() int64 {
+	if m != nil {
+		return m.PktInInt
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetPktInData() int64 {
+	if m != nil {
+		return m.PktInData
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetPktInNack() int64 {
+	if m != nil {
+		return m.PktInNack
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetPktOutInt() int64 {
+	if m != nil {
+		return m.PktOutInt
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetPktOutData() int64 {
+	if m != nil {
+		return m.PktOutData
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetPktOutNack() int64 {
+	if m != nil {
+		return m.PktOutNack
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetBytesIn() int64 {
+	if m != nil {
+		return m.BytesIn
+	}
+	return 0
+}
+
+func (m *StatusResponse) GetBytesOut() int64 {
+	if m != nil {
+		return m.BytesOut
+	}
+	return 0
+}
+
 type RegisterRequest struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	SecondaryId          string   `protobuf:"bytes,1,opt,name=secondary_id,json=secondaryId,proto3" json:"secondary_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -316,7 +610,7 @@ func (m *RegisterRequest) Reset()         { *m = RegisterRequest{} }
 func (m *RegisterRequest) String() string { return proto.CompactTextString(m) }
 func (*RegisterRequest) ProtoMessage()    {}
 func (*RegisterRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_92d653641ecf6225, []int{7}
+	return fileDescriptor_92d653641ecf6225, []int{11}
 }
 
 func (m *RegisterRequest) XXX_Unmarshal(b []byte) error {
@@ -337,25 +631,25 @@ func (m *RegisterRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RegisterRequest proto.InternalMessageInfo
 
-func (m *RegisterRequest) GetId() string {
+func (m *RegisterRequest) GetSecondaryId() string {
 	if m != nil {
-		return m.Id
+		return m.SecondaryId
 	}
 	return ""
 }
 
 type RegisterControl struct {
-	Routes               []*Route `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Primaries            []*Primary `protobuf:"bytes,1,rep,name=primaries,proto3" json:"primaries,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
 }
 
 func (m *RegisterControl) Reset()         { *m = RegisterControl{} }
 func (m *RegisterControl) String() string { return proto.CompactTextString(m) }
 func (*RegisterControl) ProtoMessage()    {}
 func (*RegisterControl) Descriptor() ([]byte, []int) {
-	return fileDescriptor_92d653641ecf6225, []int{8}
+	return fileDescriptor_92d653641ecf6225, []int{12}
 }
 
 func (m *RegisterControl) XXX_Unmarshal(b []byte) error {
@@ -376,19 +670,23 @@ func (m *RegisterControl) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RegisterControl proto.InternalMessageInfo
 
-func (m *RegisterControl) GetRoutes() []*Route {
+func (m *RegisterControl) GetPrimaries() []*Primary {
 	if m != nil {
-		return m.Routes
+		return m.Primaries
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterType((*ClusterList)(nil), "api.ClusterList")
-	proto.RegisterType((*Cluster)(nil), "api.Cluster")
-	proto.RegisterType((*Route)(nil), "api.Route")
+	proto.RegisterType((*Primary)(nil), "api.Primary")
+	proto.RegisterType((*AllPrimaries)(nil), "api.AllPrimaries")
+	proto.RegisterType((*IdentityRequest)(nil), "api.IdentityRequest")
+	proto.RegisterType((*IdentityResponse)(nil), "api.IdentityResponse")
 	proto.RegisterType((*ChannelRequest)(nil), "api.ChannelRequest")
 	proto.RegisterType((*ChannelResponse)(nil), "api.ChannelResponse")
+	proto.RegisterType((*Route)(nil), "api.Route")
+	proto.RegisterType((*RouteRequest)(nil), "api.RouteRequest")
+	proto.RegisterType((*RouteResponse)(nil), "api.RouteResponse")
 	proto.RegisterType((*StatusRequest)(nil), "api.StatusRequest")
 	proto.RegisterType((*StatusResponse)(nil), "api.StatusResponse")
 	proto.RegisterType((*RegisterRequest)(nil), "api.RegisterRequest")
@@ -398,30 +696,56 @@ func init() {
 func init() { proto.RegisterFile("primary.proto", fileDescriptor_92d653641ecf6225) }
 
 var fileDescriptor_92d653641ecf6225 = []byte{
-	// 355 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0xcf, 0x4b, 0xfb, 0x40,
-	0x10, 0xc5, 0xbb, 0xc9, 0xf7, 0x9b, 0xc6, 0xa9, 0xfd, 0xe1, 0x54, 0x24, 0xe4, 0x54, 0xf7, 0x94,
-	0x53, 0x29, 0x15, 0x29, 0xf4, 0x5a, 0xa4, 0x17, 0x41, 0x58, 0x0f, 0x9e, 0x63, 0xbb, 0xea, 0x42,
-	0x9b, 0x5d, 0x77, 0x37, 0xa0, 0xfe, 0xf5, 0xd2, 0xcd, 0x26, 0x36, 0x15, 0x6f, 0x99, 0xcf, 0xbc,
-	0x79, 0x93, 0x37, 0x09, 0xf4, 0x95, 0x16, 0xfb, 0x5c, 0x7f, 0x4e, 0x95, 0x96, 0x56, 0x62, 0x98,
-	0x2b, 0x41, 0xd7, 0xd0, 0x5b, 0xed, 0x4a, 0x63, 0xb9, 0xbe, 0x17, 0xc6, 0xe2, 0x00, 0x02, 0xb1,
-	0x4d, 0xc8, 0x84, 0x64, 0x67, 0x2c, 0x10, 0x5b, 0xcc, 0x20, 0xde, 0x54, 0x6d, 0x93, 0x04, 0x93,
-	0x30, 0xeb, 0xcd, 0xcf, 0xa7, 0xb9, 0x12, 0x53, 0x3f, 0xc3, 0x9a, 0x2e, 0x7d, 0x82, 0xae, 0x87,
-	0xbf, 0x4c, 0x12, 0xe8, 0xfa, 0xcd, 0x49, 0xe0, 0x60, 0x5d, 0x22, 0x85, 0x48, 0xcb, 0xd2, 0x72,
-	0x93, 0x84, 0xce, 0x1c, 0x9c, 0x39, 0x3b, 0x20, 0xe6, 0x3b, 0xf4, 0x01, 0xfe, 0x3b, 0x80, 0x57,
-	0x10, 0x29, 0xcd, 0x5f, 0xc4, 0x87, 0xb7, 0xf6, 0x15, 0xa6, 0x10, 0xf3, 0x62, 0xab, 0xa4, 0x28,
-	0xac, 0xf7, 0x6f, 0x6a, 0x44, 0xf8, 0xb7, 0x91, 0xc6, 0x26, 0xe1, 0x84, 0x64, 0x21, 0x73, 0xcf,
-	0x74, 0x04, 0x83, 0xd5, 0x5b, 0x5e, 0x14, 0x7c, 0xc7, 0xf8, 0x7b, 0xc9, 0x8d, 0xa5, 0x17, 0x30,
-	0x6c, 0x88, 0x51, 0xb2, 0x30, 0x9c, 0x0e, 0xa1, 0xff, 0x68, 0x73, 0x5b, 0x9a, 0x5a, 0x33, 0x82,
-	0x41, 0x0d, 0xbc, 0xe4, 0x1a, 0x86, 0x8c, 0xbf, 0x0a, 0x77, 0x87, 0x4a, 0x74, 0x9a, 0x9c, 0xde,
-	0xfe, 0x48, 0x56, 0xb2, 0xb0, 0x5a, 0xee, 0x8e, 0x22, 0x93, 0xbf, 0x22, 0xcf, 0x97, 0x10, 0xad,
-	0xa5, 0x31, 0x42, 0xe1, 0x0c, 0x62, 0x7f, 0x55, 0x83, 0xad, 0xcb, 0xa7, 0xa3, 0xe3, 0xea, 0xf0,
-	0xed, 0x68, 0x27, 0x23, 0x33, 0x32, 0xff, 0x82, 0xa8, 0x7a, 0x4f, 0x5c, 0x40, 0xec, 0x53, 0x19,
-	0x1c, 0x57, 0xea, 0x56, 0xec, 0xf4, 0xb2, 0x0d, 0x7d, 0xac, 0x0e, 0x2e, 0x0e, 0x16, 0x9a, 0xe7,
-	0x7b, 0x44, 0xa7, 0x68, 0x1d, 0x22, 0x1d, 0xb7, 0x58, 0x3d, 0xe4, 0x76, 0xdf, 0x41, 0xb7, 0x8e,
-	0xb9, 0x84, 0xb8, 0x4e, 0x8e, 0xd5, 0x9e, 0x93, 0x5b, 0xa5, 0x6d, 0xea, 0xe7, 0x68, 0x67, 0x46,
-	0x9e, 0x23, 0xf7, 0x7f, 0xde, 0x7c, 0x07, 0x00, 0x00, 0xff, 0xff, 0xb2, 0x4b, 0xd7, 0xfc, 0xb0,
-	0x02, 0x00, 0x00,
+	// 776 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x55, 0x4d, 0x6f, 0xe4, 0x44,
+	0x10, 0x5d, 0x67, 0x92, 0x89, 0xa7, 0x3c, 0x1f, 0x49, 0x6f, 0x58, 0x8c, 0xf9, 0xd8, 0xc1, 0x1c,
+	0x88, 0x90, 0x88, 0x42, 0xb2, 0x12, 0x02, 0xc4, 0x01, 0x65, 0x11, 0xf8, 0x00, 0xbb, 0x72, 0xc4,
+	0x81, 0x93, 0xd5, 0x69, 0xb7, 0x49, 0x2b, 0x33, 0x6d, 0xe3, 0x2a, 0x0b, 0xe6, 0x57, 0xf0, 0x2b,
+	0xf9, 0x1f, 0xc8, 0xdd, 0x6d, 0x8f, 0x1d, 0x22, 0xb8, 0x4d, 0xbd, 0xf7, 0xea, 0x55, 0xbb, 0xda,
+	0x7e, 0x03, 0x8b, 0xaa, 0x56, 0x5b, 0x5e, 0xef, 0x2e, 0xaa, 0xba, 0xa4, 0x92, 0x4d, 0x78, 0xa5,
+	0xe2, 0xd7, 0x70, 0xfc, 0xd6, 0xa2, 0xec, 0x43, 0x00, 0x27, 0xc8, 0x54, 0x1e, 0x7a, 0x6b, 0xef,
+	0x7c, 0x96, 0xce, 0x1c, 0x92, 0xe4, 0x2c, 0x02, 0x5f, 0xea, 0xbc, 0x2a, 0x95, 0xa6, 0xf0, 0xc0,
+	0x90, 0x7d, 0x1d, 0xff, 0x0a, 0xf3, 0xef, 0x36, 0x1b, 0x6b, 0xa4, 0x24, 0xb6, 0x56, 0x7f, 0x70,
+	0x12, 0xf7, 0xb2, 0x1e, 0x58, 0x39, 0x24, 0xc9, 0xd9, 0x67, 0xe0, 0x7c, 0x95, 0xc4, 0xf0, 0x60,
+	0x3d, 0x39, 0x0f, 0xae, 0xe6, 0x17, 0xbc, 0x52, 0x17, 0xee, 0x28, 0xe9, 0x9e, 0x8e, 0x4f, 0x61,
+	0x95, 0xe4, 0x52, 0x93, 0xa2, 0x5d, 0x2a, 0x7f, 0x6f, 0x24, 0x52, 0xfc, 0x05, 0x9c, 0xec, 0x21,
+	0xac, 0x4a, 0x8d, 0xf2, 0x7f, 0x0e, 0x1f, 0x9f, 0xc0, 0xf2, 0xe6, 0x9e, 0x6b, 0x2d, 0x37, 0x9d,
+	0xc9, 0xe7, 0xb0, 0xea, 0x11, 0xe7, 0x11, 0x81, 0x2f, 0x2c, 0x84, 0xa1, 0xb7, 0x9e, 0xb4, 0x4f,
+	0xd8, 0xd5, 0xf1, 0x35, 0x1c, 0xa5, 0x65, 0x43, 0x92, 0xbd, 0x80, 0x69, 0x55, 0xcb, 0x42, 0xfd,
+	0xe9, 0x86, 0xb8, 0x8a, 0x31, 0x38, 0x14, 0x25, 0x52, 0x38, 0x59, 0x7b, 0xe7, 0x93, 0xd4, 0xfc,
+	0x8e, 0x97, 0x30, 0x37, 0x4d, 0xdd, 0xcc, 0x6b, 0x58, 0xb8, 0xda, 0x4d, 0x8c, 0x61, 0x5a, 0xb7,
+	0x80, 0x9d, 0x17, 0x5c, 0x81, 0xd9, 0x82, 0xd5, 0x38, 0x26, 0x5e, 0xc1, 0xe2, 0x96, 0x38, 0x35,
+	0xd8, 0xb9, 0xfc, 0x75, 0x04, 0xcb, 0x0e, 0x71, 0x3e, 0x2f, 0x60, 0xba, 0x95, 0xdb, 0xb2, 0xde,
+	0x99, 0x43, 0x4d, 0x52, 0x57, 0xb1, 0x97, 0x10, 0x08, 0xcc, 0x04, 0xaf, 0xb8, 0x50, 0xb4, 0x33,
+	0xd7, 0x36, 0x49, 0x41, 0xe0, 0x8d, 0x43, 0xda, 0xb5, 0x09, 0xcc, 0xa4, 0x26, 0x73, 0x15, 0xf6,
+	0xec, 0x33, 0x81, 0xdf, 0x5b, 0x80, 0xbd, 0x0b, 0xc7, 0x02, 0xb3, 0x7b, 0x45, 0x18, 0x1e, 0x5a,
+	0x63, 0x81, 0x3f, 0x2a, 0x42, 0xf6, 0x3e, 0xcc, 0x04, 0x66, 0x5b, 0x85, 0x28, 0x31, 0x3c, 0x32,
+	0x94, 0x2f, 0xf0, 0x27, 0x53, 0xb7, 0x53, 0x0b, 0x75, 0xd7, 0xbb, 0x4e, 0xed, 0xd4, 0x42, 0xdd,
+	0x75, 0xb6, 0x2f, 0x21, 0xa8, 0x07, 0x82, 0x63, 0x2b, 0xa8, 0x47, 0x82, 0x4a, 0x51, 0x2f, 0xf0,
+	0xad, 0xa0, 0x52, 0xd4, 0x09, 0x3e, 0x86, 0x79, 0x7b, 0x35, 0xbd, 0x62, 0x66, 0x14, 0x41, 0x8b,
+	0x0d, 0x24, 0x05, 0x17, 0xb2, 0x97, 0x80, 0x95, 0xb4, 0x58, 0x27, 0xf9, 0x04, 0x16, 0x4a, 0x53,
+	0x86, 0x9c, 0x14, 0xaa, 0x42, 0xe6, 0x61, 0x60, 0x34, 0x73, 0xa5, 0xe9, 0xb6, 0xc3, 0xd8, 0xa7,
+	0xb0, 0x6a, 0x45, 0x8d, 0x36, 0xb2, 0x42, 0xc9, 0x3c, 0x9c, 0x1b, 0xd9, 0x52, 0x69, 0xfa, 0x65,
+	0x8f, 0xb2, 0x0f, 0x00, 0xaa, 0x07, 0xca, 0x94, 0xce, 0xda, 0x4f, 0x64, 0x61, 0x97, 0x52, 0x3d,
+	0x50, 0xa2, 0x13, 0x4d, 0xec, 0x23, 0x08, 0x1c, 0x9b, 0x73, 0xe2, 0xe1, 0xd2, 0xae, 0xda, 0xd0,
+	0xaf, 0x39, 0xf1, 0x01, 0xaf, 0xb9, 0x78, 0x08, 0x57, 0x03, 0xfe, 0x67, 0x2e, 0x1e, 0x3a, 0xbe,
+	0x6c, 0xc8, 0xd8, 0x9f, 0xf4, 0xfc, 0x9b, 0x86, 0x5a, 0xff, 0x35, 0xcc, 0x3b, 0xde, 0x0c, 0x38,
+	0x75, 0x3b, 0x33, 0x02, 0x33, 0x61, 0xa0, 0x30, 0x23, 0xd8, 0x50, 0x61, 0x66, 0xbc, 0x07, 0xfe,
+	0xdd, 0x8e, 0x24, 0x66, 0x4a, 0x87, 0xcf, 0x0d, 0x7b, 0x6c, 0xea, 0x44, 0xb7, 0x17, 0x6e, 0xa9,
+	0xb2, 0xa1, 0xf0, 0xcc, 0x3e, 0x9b, 0x01, 0xde, 0x34, 0x14, 0xbf, 0x82, 0x55, 0x2a, 0x7f, 0x53,
+	0x48, 0xb2, 0x76, 0x2f, 0x69, 0xbb, 0x7d, 0x94, 0xa2, 0xd4, 0xf9, 0xe8, 0x8b, 0x0c, 0x7a, 0x2c,
+	0xc9, 0xe3, 0x6f, 0xf7, 0x5d, 0x37, 0xa5, 0xa6, 0xba, 0xdc, 0x8c, 0x83, 0xc1, 0xfb, 0xcf, 0x60,
+	0xb8, 0x42, 0x98, 0xa5, 0xb2, 0xd8, 0x48, 0x41, 0x65, 0xcd, 0x2e, 0x61, 0xb6, 0x4f, 0x9f, 0x51,
+	0x4b, 0x74, 0x6a, 0xaa, 0x61, 0x3c, 0xc5, 0xcf, 0x2e, 0x3d, 0xf6, 0x0a, 0xa6, 0x3f, 0x94, 0x88,
+	0xaa, 0x62, 0xff, 0x16, 0x3c, 0xd9, 0x73, 0xee, 0x5d, 0x7a, 0x57, 0x7f, 0x1f, 0xc0, 0x61, 0xa2,
+	0x8b, 0x92, 0x7d, 0x05, 0x7e, 0x97, 0x41, 0xec, 0xcc, 0xa8, 0x1f, 0xa5, 0x54, 0xf4, 0xce, 0x23,
+	0xd4, 0x7e, 0xaa, 0xf1, 0x33, 0xf6, 0x25, 0xf8, 0x2e, 0x79, 0x90, 0x3d, 0x37, 0xa2, 0x71, 0x34,
+	0x45, 0x67, 0x63, 0xb0, 0x6f, 0xbc, 0x86, 0xa9, 0x89, 0x06, 0x74, 0x47, 0x1e, 0x66, 0x4b, 0xc4,
+	0x86, 0x50, 0xd7, 0x72, 0xe9, 0xb1, 0x6f, 0x00, 0xde, 0x36, 0x78, 0x6f, 0x03, 0xc3, 0xcd, 0x1b,
+	0xa7, 0x87, 0x6b, 0x1d, 0x87, 0x8c, 0x79, 0x5c, 0xdb, 0xbc, 0xd9, 0xb8, 0xe6, 0x27, 0x74, 0xd1,
+	0x53, 0x86, 0xae, 0xf9, 0x6b, 0xf0, 0xbb, 0xfb, 0x75, 0x2b, 0x7a, 0xf4, 0x92, 0x44, 0x63, 0xd4,
+	0xbd, 0x04, 0xed, 0xa9, 0xef, 0xa6, 0xe6, 0x2f, 0xea, 0xfa, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0x11, 0xe6, 0x7e, 0xf9, 0xb3, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -432,272 +756,30 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// GossipClient is the client API for Gossip service.
+// ReflectorClient is the client API for Reflector service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type GossipClient interface {
-	Clusters(ctx context.Context, opts ...grpc.CallOption) (Gossip_ClustersClient, error)
+type ReflectorClient interface {
+	// request sent by Primary
+	Primaries(ctx context.Context, in *Primary, opts ...grpc.CallOption) (Reflector_PrimariesClient, error)
+	// request sent by Watcher
+	Gossip(ctx context.Context, opts ...grpc.CallOption) (Reflector_GossipClient, error)
 }
 
-type gossipClient struct {
+type reflectorClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewGossipClient(cc *grpc.ClientConn) GossipClient {
-	return &gossipClient{cc}
+func NewReflectorClient(cc *grpc.ClientConn) ReflectorClient {
+	return &reflectorClient{cc}
 }
 
-func (c *gossipClient) Clusters(ctx context.Context, opts ...grpc.CallOption) (Gossip_ClustersClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Gossip_serviceDesc.Streams[0], "/api.Gossip/Clusters", opts...)
+func (c *reflectorClient) Primaries(ctx context.Context, in *Primary, opts ...grpc.CallOption) (Reflector_PrimariesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Reflector_serviceDesc.Streams[0], "/api.Reflector/Primaries", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &gossipClustersClient{stream}
-	return x, nil
-}
-
-type Gossip_ClustersClient interface {
-	Send(*Cluster) error
-	Recv() (*ClusterList, error)
-	grpc.ClientStream
-}
-
-type gossipClustersClient struct {
-	grpc.ClientStream
-}
-
-func (x *gossipClustersClient) Send(m *Cluster) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *gossipClustersClient) Recv() (*ClusterList, error) {
-	m := new(ClusterList)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// GossipServer is the server API for Gossip service.
-type GossipServer interface {
-	Clusters(Gossip_ClustersServer) error
-}
-
-// UnimplementedGossipServer can be embedded to have forward compatible implementations.
-type UnimplementedGossipServer struct {
-}
-
-func (*UnimplementedGossipServer) Clusters(srv Gossip_ClustersServer) error {
-	return status.Errorf(codes.Unimplemented, "method Clusters not implemented")
-}
-
-func RegisterGossipServer(s *grpc.Server, srv GossipServer) {
-	s.RegisterService(&_Gossip_serviceDesc, srv)
-}
-
-func _Gossip_Clusters_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(GossipServer).Clusters(&gossipClustersServer{stream})
-}
-
-type Gossip_ClustersServer interface {
-	Send(*ClusterList) error
-	Recv() (*Cluster, error)
-	grpc.ServerStream
-}
-
-type gossipClustersServer struct {
-	grpc.ServerStream
-}
-
-func (x *gossipClustersServer) Send(m *ClusterList) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *gossipClustersServer) Recv() (*Cluster, error) {
-	m := new(Cluster)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-var _Gossip_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "api.Gossip",
-	HandlerType: (*GossipServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "Clusters",
-			Handler:       _Gossip_Clusters_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-	},
-	Metadata: "primary.proto",
-}
-
-// StatusClient is the client API for Status service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type StatusClient interface {
-	Channels(ctx context.Context, in *ChannelRequest, opts ...grpc.CallOption) (*ChannelResponse, error)
-	Stream(ctx context.Context, opts ...grpc.CallOption) (Status_StreamClient, error)
-}
-
-type statusClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewStatusClient(cc *grpc.ClientConn) StatusClient {
-	return &statusClient{cc}
-}
-
-func (c *statusClient) Channels(ctx context.Context, in *ChannelRequest, opts ...grpc.CallOption) (*ChannelResponse, error) {
-	out := new(ChannelResponse)
-	err := c.cc.Invoke(ctx, "/api.Status/Channels", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *statusClient) Stream(ctx context.Context, opts ...grpc.CallOption) (Status_StreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Status_serviceDesc.Streams[0], "/api.Status/Stream", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &statusStreamClient{stream}
-	return x, nil
-}
-
-type Status_StreamClient interface {
-	Send(*StatusRequest) error
-	Recv() (*StatusResponse, error)
-	grpc.ClientStream
-}
-
-type statusStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *statusStreamClient) Send(m *StatusRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *statusStreamClient) Recv() (*StatusResponse, error) {
-	m := new(StatusResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// StatusServer is the server API for Status service.
-type StatusServer interface {
-	Channels(context.Context, *ChannelRequest) (*ChannelResponse, error)
-	Stream(Status_StreamServer) error
-}
-
-// UnimplementedStatusServer can be embedded to have forward compatible implementations.
-type UnimplementedStatusServer struct {
-}
-
-func (*UnimplementedStatusServer) Channels(ctx context.Context, req *ChannelRequest) (*ChannelResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Channels not implemented")
-}
-func (*UnimplementedStatusServer) Stream(srv Status_StreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method Stream not implemented")
-}
-
-func RegisterStatusServer(s *grpc.Server, srv StatusServer) {
-	s.RegisterService(&_Status_serviceDesc, srv)
-}
-
-func _Status_Channels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChannelRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(StatusServer).Channels(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/api.Status/Channels",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StatusServer).Channels(ctx, req.(*ChannelRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Status_Stream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(StatusServer).Stream(&statusStreamServer{stream})
-}
-
-type Status_StreamServer interface {
-	Send(*StatusResponse) error
-	Recv() (*StatusRequest, error)
-	grpc.ServerStream
-}
-
-type statusStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *statusStreamServer) Send(m *StatusResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *statusStreamServer) Recv() (*StatusRequest, error) {
-	m := new(StatusRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-var _Status_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "api.Status",
-	HandlerType: (*StatusServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Channels",
-			Handler:    _Status_Channels_Handler,
-		},
-	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "Stream",
-			Handler:       _Status_Stream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-	},
-	Metadata: "primary.proto",
-}
-
-// ControlClient is the client API for Control service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type ControlClient interface {
-	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (Control_RegisterClient, error)
-}
-
-type controlClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewControlClient(cc *grpc.ClientConn) ControlClient {
-	return &controlClient{cc}
-}
-
-func (c *controlClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (Control_RegisterClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Control_serviceDesc.Streams[0], "/api.Control/Register", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &controlRegisterClient{stream}
+	x := &reflectorPrimariesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -707,16 +789,306 @@ func (c *controlClient) Register(ctx context.Context, in *RegisterRequest, opts 
 	return x, nil
 }
 
-type Control_RegisterClient interface {
+type Reflector_PrimariesClient interface {
+	Recv() (*AllPrimaries, error)
+	grpc.ClientStream
+}
+
+type reflectorPrimariesClient struct {
+	grpc.ClientStream
+}
+
+func (x *reflectorPrimariesClient) Recv() (*AllPrimaries, error) {
+	m := new(AllPrimaries)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *reflectorClient) Gossip(ctx context.Context, opts ...grpc.CallOption) (Reflector_GossipClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Reflector_serviceDesc.Streams[1], "/api.Reflector/Gossip", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &reflectorGossipClient{stream}
+	return x, nil
+}
+
+type Reflector_GossipClient interface {
+	Send(*AllPrimaries) error
+	Recv() (*AllPrimaries, error)
+	grpc.ClientStream
+}
+
+type reflectorGossipClient struct {
+	grpc.ClientStream
+}
+
+func (x *reflectorGossipClient) Send(m *AllPrimaries) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *reflectorGossipClient) Recv() (*AllPrimaries, error) {
+	m := new(AllPrimaries)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// ReflectorServer is the server API for Reflector service.
+type ReflectorServer interface {
+	// request sent by Primary
+	Primaries(*Primary, Reflector_PrimariesServer) error
+	// request sent by Watcher
+	Gossip(Reflector_GossipServer) error
+}
+
+// UnimplementedReflectorServer can be embedded to have forward compatible implementations.
+type UnimplementedReflectorServer struct {
+}
+
+func (*UnimplementedReflectorServer) Primaries(req *Primary, srv Reflector_PrimariesServer) error {
+	return status.Errorf(codes.Unimplemented, "method Primaries not implemented")
+}
+func (*UnimplementedReflectorServer) Gossip(srv Reflector_GossipServer) error {
+	return status.Errorf(codes.Unimplemented, "method Gossip not implemented")
+}
+
+func RegisterReflectorServer(s *grpc.Server, srv ReflectorServer) {
+	s.RegisterService(&_Reflector_serviceDesc, srv)
+}
+
+func _Reflector_Primaries_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Primary)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ReflectorServer).Primaries(m, &reflectorPrimariesServer{stream})
+}
+
+type Reflector_PrimariesServer interface {
+	Send(*AllPrimaries) error
+	grpc.ServerStream
+}
+
+type reflectorPrimariesServer struct {
+	grpc.ServerStream
+}
+
+func (x *reflectorPrimariesServer) Send(m *AllPrimaries) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _Reflector_Gossip_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ReflectorServer).Gossip(&reflectorGossipServer{stream})
+}
+
+type Reflector_GossipServer interface {
+	Send(*AllPrimaries) error
+	Recv() (*AllPrimaries, error)
+	grpc.ServerStream
+}
+
+type reflectorGossipServer struct {
+	grpc.ServerStream
+}
+
+func (x *reflectorGossipServer) Send(m *AllPrimaries) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *reflectorGossipServer) Recv() (*AllPrimaries, error) {
+	m := new(AllPrimaries)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+var _Reflector_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "api.Reflector",
+	HandlerType: (*ReflectorServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Primaries",
+			Handler:       _Reflector_Primaries_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "Gossip",
+			Handler:       _Reflector_Gossip_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "primary.proto",
+}
+
+// InfoClient is the client API for Info service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type InfoClient interface {
+	Identity(ctx context.Context, in *IdentityRequest, opts ...grpc.CallOption) (*IdentityResponse, error)
+	// request sent by Secondary
+	Channels(ctx context.Context, in *ChannelRequest, opts ...grpc.CallOption) (*ChannelResponse, error)
+	// request sent by Secondary (and Primary?)
+	Routes(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (Info_RoutesClient, error)
+	// request sent by Secondary
+	PushStatus(ctx context.Context, opts ...grpc.CallOption) (Info_PushStatusClient, error)
+	// request sent by Watcher
+	PullStatus(ctx context.Context, opts ...grpc.CallOption) (Info_PullStatusClient, error)
+	// control Secondary
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (Info_RegisterClient, error)
+}
+
+type infoClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewInfoClient(cc *grpc.ClientConn) InfoClient {
+	return &infoClient{cc}
+}
+
+func (c *infoClient) Identity(ctx context.Context, in *IdentityRequest, opts ...grpc.CallOption) (*IdentityResponse, error) {
+	out := new(IdentityResponse)
+	err := c.cc.Invoke(ctx, "/api.Info/Identity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *infoClient) Channels(ctx context.Context, in *ChannelRequest, opts ...grpc.CallOption) (*ChannelResponse, error) {
+	out := new(ChannelResponse)
+	err := c.cc.Invoke(ctx, "/api.Info/Channels", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *infoClient) Routes(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (Info_RoutesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Info_serviceDesc.Streams[0], "/api.Info/Routes", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &infoRoutesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Info_RoutesClient interface {
+	Recv() (*RouteResponse, error)
+	grpc.ClientStream
+}
+
+type infoRoutesClient struct {
+	grpc.ClientStream
+}
+
+func (x *infoRoutesClient) Recv() (*RouteResponse, error) {
+	m := new(RouteResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *infoClient) PushStatus(ctx context.Context, opts ...grpc.CallOption) (Info_PushStatusClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Info_serviceDesc.Streams[1], "/api.Info/PushStatus", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &infoPushStatusClient{stream}
+	return x, nil
+}
+
+type Info_PushStatusClient interface {
+	Send(*StatusResponse) error
+	Recv() (*StatusRequest, error)
+	grpc.ClientStream
+}
+
+type infoPushStatusClient struct {
+	grpc.ClientStream
+}
+
+func (x *infoPushStatusClient) Send(m *StatusResponse) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *infoPushStatusClient) Recv() (*StatusRequest, error) {
+	m := new(StatusRequest)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *infoClient) PullStatus(ctx context.Context, opts ...grpc.CallOption) (Info_PullStatusClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Info_serviceDesc.Streams[2], "/api.Info/PullStatus", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &infoPullStatusClient{stream}
+	return x, nil
+}
+
+type Info_PullStatusClient interface {
+	Send(*StatusRequest) error
+	Recv() (*StatusResponse, error)
+	grpc.ClientStream
+}
+
+type infoPullStatusClient struct {
+	grpc.ClientStream
+}
+
+func (x *infoPullStatusClient) Send(m *StatusRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *infoPullStatusClient) Recv() (*StatusResponse, error) {
+	m := new(StatusResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *infoClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (Info_RegisterClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Info_serviceDesc.Streams[3], "/api.Info/Register", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &infoRegisterClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Info_RegisterClient interface {
 	Recv() (*RegisterControl, error)
 	grpc.ClientStream
 }
 
-type controlRegisterClient struct {
+type infoRegisterClient struct {
 	grpc.ClientStream
 }
 
-func (x *controlRegisterClient) Recv() (*RegisterControl, error) {
+func (x *infoRegisterClient) Recv() (*RegisterControl, error) {
 	m := new(RegisterControl)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -724,52 +1096,212 @@ func (x *controlRegisterClient) Recv() (*RegisterControl, error) {
 	return m, nil
 }
 
-// ControlServer is the server API for Control service.
-type ControlServer interface {
-	Register(*RegisterRequest, Control_RegisterServer) error
+// InfoServer is the server API for Info service.
+type InfoServer interface {
+	Identity(context.Context, *IdentityRequest) (*IdentityResponse, error)
+	// request sent by Secondary
+	Channels(context.Context, *ChannelRequest) (*ChannelResponse, error)
+	// request sent by Secondary (and Primary?)
+	Routes(*RouteRequest, Info_RoutesServer) error
+	// request sent by Secondary
+	PushStatus(Info_PushStatusServer) error
+	// request sent by Watcher
+	PullStatus(Info_PullStatusServer) error
+	// control Secondary
+	Register(*RegisterRequest, Info_RegisterServer) error
 }
 
-// UnimplementedControlServer can be embedded to have forward compatible implementations.
-type UnimplementedControlServer struct {
+// UnimplementedInfoServer can be embedded to have forward compatible implementations.
+type UnimplementedInfoServer struct {
 }
 
-func (*UnimplementedControlServer) Register(req *RegisterRequest, srv Control_RegisterServer) error {
+func (*UnimplementedInfoServer) Identity(ctx context.Context, req *IdentityRequest) (*IdentityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Identity not implemented")
+}
+func (*UnimplementedInfoServer) Channels(ctx context.Context, req *ChannelRequest) (*ChannelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Channels not implemented")
+}
+func (*UnimplementedInfoServer) Routes(req *RouteRequest, srv Info_RoutesServer) error {
+	return status.Errorf(codes.Unimplemented, "method Routes not implemented")
+}
+func (*UnimplementedInfoServer) PushStatus(srv Info_PushStatusServer) error {
+	return status.Errorf(codes.Unimplemented, "method PushStatus not implemented")
+}
+func (*UnimplementedInfoServer) PullStatus(srv Info_PullStatusServer) error {
+	return status.Errorf(codes.Unimplemented, "method PullStatus not implemented")
+}
+func (*UnimplementedInfoServer) Register(req *RegisterRequest, srv Info_RegisterServer) error {
 	return status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 
-func RegisterControlServer(s *grpc.Server, srv ControlServer) {
-	s.RegisterService(&_Control_serviceDesc, srv)
+func RegisterInfoServer(s *grpc.Server, srv InfoServer) {
+	s.RegisterService(&_Info_serviceDesc, srv)
 }
 
-func _Control_Register_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Info_Identity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IdentityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InfoServer).Identity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Info/Identity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InfoServer).Identity(ctx, req.(*IdentityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Info_Channels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChannelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InfoServer).Channels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Info/Channels",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InfoServer).Channels(ctx, req.(*ChannelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Info_Routes_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RouteRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(InfoServer).Routes(m, &infoRoutesServer{stream})
+}
+
+type Info_RoutesServer interface {
+	Send(*RouteResponse) error
+	grpc.ServerStream
+}
+
+type infoRoutesServer struct {
+	grpc.ServerStream
+}
+
+func (x *infoRoutesServer) Send(m *RouteResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _Info_PushStatus_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(InfoServer).PushStatus(&infoPushStatusServer{stream})
+}
+
+type Info_PushStatusServer interface {
+	Send(*StatusRequest) error
+	Recv() (*StatusResponse, error)
+	grpc.ServerStream
+}
+
+type infoPushStatusServer struct {
+	grpc.ServerStream
+}
+
+func (x *infoPushStatusServer) Send(m *StatusRequest) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *infoPushStatusServer) Recv() (*StatusResponse, error) {
+	m := new(StatusResponse)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _Info_PullStatus_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(InfoServer).PullStatus(&infoPullStatusServer{stream})
+}
+
+type Info_PullStatusServer interface {
+	Send(*StatusResponse) error
+	Recv() (*StatusRequest, error)
+	grpc.ServerStream
+}
+
+type infoPullStatusServer struct {
+	grpc.ServerStream
+}
+
+func (x *infoPullStatusServer) Send(m *StatusResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *infoPullStatusServer) Recv() (*StatusRequest, error) {
+	m := new(StatusRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _Info_Register_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(RegisterRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ControlServer).Register(m, &controlRegisterServer{stream})
+	return srv.(InfoServer).Register(m, &infoRegisterServer{stream})
 }
 
-type Control_RegisterServer interface {
+type Info_RegisterServer interface {
 	Send(*RegisterControl) error
 	grpc.ServerStream
 }
 
-type controlRegisterServer struct {
+type infoRegisterServer struct {
 	grpc.ServerStream
 }
 
-func (x *controlRegisterServer) Send(m *RegisterControl) error {
+func (x *infoRegisterServer) Send(m *RegisterControl) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-var _Control_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "api.Control",
-	HandlerType: (*ControlServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+var _Info_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "api.Info",
+	HandlerType: (*InfoServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Identity",
+			Handler:    _Info_Identity_Handler,
+		},
+		{
+			MethodName: "Channels",
+			Handler:    _Info_Channels_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
+			StreamName:    "Routes",
+			Handler:       _Info_Routes_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "PushStatus",
+			Handler:       _Info_PushStatus_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "PullStatus",
+			Handler:       _Info_PullStatus_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
 			StreamName:    "Register",
-			Handler:       _Control_Register_Handler,
+			Handler:       _Info_Register_Handler,
 			ServerStreams: true,
 		},
 	},

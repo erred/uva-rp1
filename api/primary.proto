@@ -2,46 +2,94 @@ syntax = "proto3";
 
 package api;
 
-service Gossip {
-  rpc Clusters(stream Cluster) returns (stream ClusterList) {}
+
+// server implemented bu Watcher
+service Reflector {
+  // request sent by Primary
+  rpc Primaries(Primary) returns (stream AllPrimaries) {}
+  // request sent by Watcher
+  rpc Gossip(stream AllPrimaries) returns (stream AllPrimaries) {}
 }
 
-message ClusterList {
-  string id = 1;
-  repeated Cluster clusters = 2;
-}
-message Cluster {
-  string id = 1;
-  string primary = 2;
-  repeated Route routes = 3;
-}
-
-message Route {
-  string prefix = 1;
+message Primary {
+  string primary_id = 1;
+  // primary: host:port
   string endpoint = 2;
-  int64 cost = 3;
+}
+message AllPrimaries {
+  string watcher_id = 1;
+  repeated Primary primaries = 2;
 }
 
-service Status {
+
+// server implemented by Primary
+service Info {
+  rpc Identity(IdentityRequest) returns (IdentityResponse){}
+
+  // request sent by Secondary
   rpc Channels(ChannelRequest) returns (ChannelResponse){}
-  rpc Stream(stream StatusRequest) returns (stream StatusResponse) {}
+  // request sent by Secondary (and Primary?)
+  rpc Routes(RouteRequest) returns (stream RouteResponse) {}
+  // request sent by Secondary
+  rpc PushStatus(stream StatusResponse) returns (stream StatusRequest){}
+
+  // request sent by Watcher
+  rpc PullStatus(stream StatusRequest) returns (stream StatusResponse) {}
+
+  // control Secondary
+  rpc Register(RegisterRequest) returns (stream RegisterControl) {}
+}
+
+message IdentityRequest{}
+message IdentityResponse{
+  string primary_id = 1;
 }
 
 message ChannelRequest {}
 message ChannelResponse {
-
+  // nfd: scheme://host:port
+  repeated string channels = 1;
 }
+
+message Route {
+  string prefix = 1;
+  int64 cost = 3;
+}
+message RouteRequest {}
+message RouteResponse {
+  repeated Route routes = 1;
+}
+
 message StatusRequest {}
 message StatusResponse {
+  int64 memory = 1;
 
+  int64 cs_capacity = 2;
+  int64 cs_entries = 3;
+  int64 cs_hits = 4;
+  int64 cs_misses = 5;
+
+  int64 fib_entries = 6;
+  int64 rib_entries = 7;
+  int64 pit_entries = 8;
+  int64 chan_entries = 9;
+  int64 face_entries = 10;
+
+  int64 int_satisifed = 11;
+  int64 int_unsatisfied = 12;
+  int64 pkt_in_int = 13;
+  int64 pkt_in_data = 14;
+  int64 pkt_in_nack = 15;
+  int64 pkt_out_int = 16;
+  int64 pkt_out_data = 17;
+  int64 pkt_out_nack = 18;
+  int64 bytes_in = 19;
+  int64 bytes_out = 20;
 }
 
-service Control {
-  rpc Register(RegisterRequest) returns (stream RegisterControl) {}
-}
 message RegisterRequest {
-  string id = 1;
+  string secondary_id = 1;
 }
 message RegisterControl {
-  repeated Route routes = 1;
+  repeated Primary primaries = 1;
 }

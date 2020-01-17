@@ -3,80 +3,112 @@ package secondary
 import (
 	"context"
 	"flag"
-	"math/rand"
-	"strconv"
-	"time"
-
+	"fmt"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/seankhliao/uva-rp1/api"
 	"github.com/seankhliao/uva-rp1/nfdstat"
+	"google.golang.org/grpc"
+	"math/rand"
+	"os"
+	"strconv"
+	"time"
 )
 
 type route struct {
 	prefix string
 	uri    string
 }
+type primary struct {
+	p    api.Primary
+	c    api.InfoClient
+	ch   string
+	conn *grpc.ClientConn
+}
 
 type Secondary struct {
 	primary  string
-	name     string
 	strategy string
+	name     string
 
-	faces  chan map[int64]string
-	routes chan map[route]struct{}
+	primaries chan map[string]primary
 
-	client api.ControlClient
-	stat   *nfdstat.Server
-	log    *zerolog.Logger
+	ctl  api.InfoClient
+	stat *nfdstat.Stat
+	log  *zerolog.Logger
 }
 
 func New(args []string, logger *zerolog.Logger) *Secondary {
 	if logger == nil {
-		*logger = log.With().Str("mod", "secondary").Logger()
+		l := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, NoColor: true, TimeFormat: time.RFC3339Nano}).With().Timestamp().Logger()
+		logger = &l
 	}
 
 	s := &Secondary{
-		faces:  make(chan map[int64]string, 1),
-		routes: make(chan map[route]struct{}, 1),
+		primaries: make(chan map[string]primary, 1),
 
-		stat: nfdstat.New(logger),
+		stat: nfdstat.New(),
 		log:  logger,
 	}
 
-	s.faces <- make(map[int64]string)
-	s.routes <- make(map[route]struct{})
+	s.primaries <- make(map[string]primary)
 
 	fs := flag.NewFlagSet("secondary", flag.ExitOnError)
 	fs.StringVar(&s.primary, "primary", "145.100.104.117:8000", "host:port of primaary to connect to")
-	fs.StringVar(&s.name, "name", strconv.FormatInt(rand.Int63(), 10), "overrdide randomly generated name of node")
 	fs.StringVar(&s.strategy, "strategy", "/localhost/nfd/strategy/asf", "set routing strategy")
+	fs.StringVar(&s.name, "name", strconv.FormatInt(rand.Int63(), 10), "overrdide randomly generated name of node")
 	fs.Parse(args)
 	return s
 }
 
 func (s *Secondary) Run() error {
+	s.log.Info().Msg("starting run")
 	// set default prefix
-	var err error
-	for err != nil {
-		err = nfdstat.RouteStrategy(context.Background(), "/", s.strategy)
+	for {
+		err := nfdstat.RouteStrategy(context.Background(), "/", s.strategy)
 		if err != nil {
 			s.log.Error().Err(err).Str("prefix", "/").Str("strategy", s.strategy).Msg("set strategy")
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
+	retry := time.Second
+	for {
+		connected, err := s.run()
+		if connected {
+			retry = time.Second
+
+		}
+		s.log.Error().Err(err).Dur("backoff", retry).Msg("run")
+		time.Sleep(retry)
+		if retry < 32*time.Second {
+			retry *= 2
 		}
 	}
 
-	retry := time.Second
+}
+
+func (s *Secondary) run() (bool, error) {
+	// establish connection
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, s.primary, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return false, fmt.Errorf("dial: %w", err)
+	}
+	defer conn.Close()
+
+	s.ctl = api.NewInfoClient(conn)
+
+	go s.pushStatus()
+
+	c, err := s.ctl.Register(ctx, &api.RegisterRequest{})
+	if err != nil {
+		return true, fmt.Errorf("register: %w", err)
+	}
 	for {
-		err := s.handle(context.Background())
-		s.log.Error().Err(err).Dur("backoff", retry).Msg("register")
-		time.Sleep(retry)
+		err = s.recvCmd(c)
 		if err != nil {
-			if retry < 32*time.Second {
-				retry *= 2
-			}
-		} else {
-			retry = time.Second
+			return true, err
 		}
 	}
 }
-

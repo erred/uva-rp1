@@ -8,7 +8,7 @@ import (
 )
 
 func (w *Watcher) Primaries(p *api.Primary, s api.Reflector_PrimariesServer) error {
-	if err := func() error {
+	err := func() error {
 		pr := <-w.primaries
 		defer func() {
 			w.primaries <- pr
@@ -24,7 +24,8 @@ func (w *Watcher) Primaries(p *api.Primary, s api.Reflector_PrimariesServer) err
 		w.notify()
 		w.log.Info().Str("id", p.PrimaryId).Str("endpoint", p.Endpoint).Msg("primaries registered")
 		return nil
-	}(); err != nil {
+	}()
+	if err != nil {
 		return err
 	}
 
@@ -128,5 +129,6 @@ func (w *Watcher) gossipRecv(id string, g gossipRecver) error {
 		r[id] = re
 		w.reflectors <- r
 		w.notify()
+		w.log.Info().Str("id", id).Msg("gosssip recv")
 	}
 }

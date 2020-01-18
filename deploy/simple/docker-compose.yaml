@@ -9,8 +9,8 @@ networks:
 services:
   watcher:
     container_name: watcher
-    image: seankhliao/ndn-prometheus
-    ports:
+    image: seankhliao/ndn-watcher
+    expose:
       # watcher
       - "8000"
       # prometheus
@@ -30,8 +30,10 @@ services:
     networks:
       servers:
         ipv4_address: "172.20.0.11"
-    volumes:
-      - ./primary1/ndn:/usr/local/etc/ndn
+    # volumes:
+    #   - ./primary1/ndn:/usr/local/etc/ndn
+    environment:
+      WATCHER: "172.20.0.2:8000"
   server1:
     container_name: server1
     image: seankhliao/ndn-traffic
@@ -47,22 +49,23 @@ services:
       - ./server1/ndn:/usr/local/etc/ndn
     environment:
       NDN_TRAFFIC_SERVER_DISABLED: ""
+      PRIMARY: "172.20.0.11:8000"
       # NDN_AUTOCONFIG_DISABLED: ""
-  client1:
-    container_name: client1
-    image: seankhliao/ndn-traffic
-    expose:
-      # unicast
-      - "6363"
-      # server
-      - "8000"
-    networks:
-      servers:
-        ipv4_address: "172.20.0.12"
-    volumes:
-      - ./client1/ndn:/usr/local/etc/ndn
-    environment:
-      NDN_TRAFFIC_CLIENT_DISABLED: ""
+  # client1:
+  #   container_name: client1
+  #   image: seankhliao/ndn-traffic
+  #   expose:
+  #     # unicast
+  #     - "6363"
+  #     # server
+  #     - "8000"
+  #   networks:
+  #     servers:
+  #       ipv4_address: "172.20.0.12"
+  #   volumes:
+  #     - ./client1/ndn:/usr/local/etc/ndn
+  #   environment:
+  #     NDN_TRAFFIC_CLIENT_DISABLED: ""
 
   primary2:
     container_name: primary2
@@ -75,8 +78,10 @@ services:
     networks:
       servers:
         ipv4_address: "172.20.0.21"
-    volumes:
-      - ./primary2/ndn:/usr/local/etc/ndn
+    # volumes:
+    #   - ./primary2/ndn:/usr/local/etc/ndn
+    environment:
+      WATCHER: "172.20.0.2:8000"
   server2:
     container_name: server2
     image: seankhliao/ndn-traffic
@@ -87,26 +92,27 @@ services:
       - "8000"
     networks:
       servers:
-        ipv4_address: "172.20.0.12"
+        ipv4_address: "172.20.0.22"
     volumes:
       - ./server2/ndn:/usr/local/etc/ndn
     environment:
       NDN_TRAFFIC_SERVER_DISABLED: ""
-  client2:
-    container_name: client2
-    image: seankhliao/ndn-traffic
-    expose:
-      # unicast
-      - "6363"
-      # server
-      - "8000"
-    networks:
-      servers:
-        ipv4_address: "172.20.0.12"
-    volumes:
-      - ./client2/ndn:/usr/local/etc/ndn
-    environment:
-      NDN_TRAFFIC_CLIENT_DISABLED: ""
+      PRIMARY: "172.20.0.21:8000"
+  # client2:
+  #   container_name: client2
+  #   image: seankhliao/ndn-traffic
+  #   expose:
+  #     # unicast
+  #     - "6363"
+  #     # server
+  #     - "8000"
+  #   networks:
+  #     servers:
+  #       ipv4_address: "172.20.0.12"
+  #   volumes:
+  #     - ./client2/ndn:/usr/local/etc/ndn
+  #   environment:
+  #     NDN_TRAFFIC_CLIENT_DISABLED: ""
 
   primary3:
     container_name: primary3
@@ -119,8 +125,10 @@ services:
     networks:
       servers:
         ipv4_address: "172.20.0.31"
-    volumes:
-      - ./primary3/ndn:/usr/local/etc/ndn
+    # volumes:
+    #   - ./primary3/ndn:/usr/local/etc/ndn
+    environment:
+      WATCHER: "172.20.0.2:8000"
   server3:
     container_name: server3
     image: seankhliao/ndn-traffic
@@ -131,23 +139,24 @@ services:
       - "8000"
     networks:
       servers:
-        ipv4_address: "172.20.0.12"
+        ipv4_address: "172.20.0.32"
     volumes:
       - ./server3/ndn:/usr/local/etc/ndn
     environment:
       NDN_TRAFFIC_SERVER_DISABLED: ""
-  client3:
-    container_name: client3
-    image: seankhliao/ndn-traffic
-    expose:
-      # unicast
-      - "6363"
-      # server
-      - "8000"
-    networks:
-      servers:
-        ipv4_address: "172.20.0.12"
-    volumes:
-      - ./client3/ndn:/usr/local/etc/ndn
-    environment:
-      NDN_TRAFFIC_CLIENT_DISABLED: ""
+      PRIMARY: "172.20.0.21:8000"
+  # client3:
+  #   container_name: client3
+  #   image: seankhliao/ndn-traffic
+  #   expose:
+  #     # unicast
+  #     - "6363"
+  #     # server
+  #     - "8000"
+  #   networks:
+  #     servers:
+  #       ipv4_address: "172.20.0.12"
+  #   volumes:
+  #     - ./client3/ndn:/usr/local/etc/ndn
+  #   environment:
+  #     NDN_TRAFFIC_CLIENT_DISABLED: ""

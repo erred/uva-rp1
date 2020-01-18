@@ -3,18 +3,15 @@ package primary
 import (
 	"flag"
 	"fmt"
-	"math/rand"
 	"net"
-	"net/http"
+	// "net/http"
 	"os"
-	"strconv"
-	"strings"
+	// "strings"
 	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/seankhliao/uva-rp1/api"
 	"github.com/seankhliao/uva-rp1/nfdstat"
-	pkgsec "github.com/seankhliao/uva-rp1/secondary"
 	"google.golang.org/grpc"
 )
 
@@ -61,13 +58,6 @@ func New(args []string, logger *zerolog.Logger) *Primary {
 		l := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, NoColor: true, TimeFormat: time.RFC3339Nano}).With().Timestamp().Logger()
 		logger = &l
 	}
-	var defaultIP string
-	ips, err := localIPs()
-	if err != nil {
-		// handle error
-	} else if len(ips) > 0 {
-		defaultIP = ips[0]
-	}
 
 	p := &Primary{
 		localChan:   make(chan []string, 1),
@@ -91,9 +81,17 @@ func New(args []string, logger *zerolog.Logger) *Primary {
 	p.wantRoutes <- make(map[string]wantRoute)
 	p.status <- nil
 
+	var defaultIP string
+	ips, err := localIPs()
+	if err != nil {
+		p.log.Fatal().Err(err).Msg("no known public ip to announce")
+	} else if len(ips) > 0 {
+		defaultIP = ips[0]
+	}
+
 	fs := flag.NewFlagSet("primary", flag.ExitOnError)
 	fs.DurationVar(&p.scrapeInterval, "scrape", 15*time.Second, "scrape interval")
-	fs.StringVar(&p.name, "name", strconv.FormatInt(rand.Int63(), 10), "overrdide randomly generated name of node")
+	fs.StringVar(&p.name, "name", defaultIP, "overrdide randomly generated name of node")
 	fs.StringVar(&p.singleStrategy, "single.strategy", "/localhost/nfd/strategy/asf", "default strategy")
 	fs.StringVar(&p.multiStrategy, "multi.strategy", "/localhost/nfd/strategy/access", "default strategy")
 	fs.StringVar(&p.watcherAddr, "watcher", "145.100.104.117:8000", "host:port of watcher to connect to")
@@ -104,19 +102,21 @@ func New(args []string, logger *zerolog.Logger) *Primary {
 	if p.localAddr == "" {
 		p.log.Fatal().Msg("no public ip addr found")
 	}
+
+	p.log.Info().Dur("interval", p.scrapeInterval).Str("name", p.name).Strs("strategy", []string{p.singleStrategy, p.multiStrategy}).Str("watcher", p.watcherAddr).Str("addr", p.localAddr).Int("port", p.port).Msg("created")
 	return p
 }
 
 func (p *Primary) Run() error {
+	p.log.Info().Msg("starting run")
+
 	go p.distributor()
 	first := make(chan struct{})
 	go p.scraper(first)
 	<-first
+	p.log.Info().Msg("first scrape")
 	go p.routeAdvertiser()
 	go p.primaryDiscoverer()
-
-	args := []string{"-primary", fmt.Sprint("%s:%d", p.localAddr, p.port), "-strategy", p.singleStrategy}
-	go pkgsec.New(args, nil).Run()
 
 	// TODO: register prometheus metrics
 	// httpServer := http.ServeMux{}
@@ -125,14 +125,19 @@ func (p *Primary) Run() error {
 	grpcServer := grpc.NewServer()
 	api.RegisterInfoServer(grpcServer, p)
 
-	return http.ListenAndServe(fmt.Sprintf(":%d", p.port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			grpcServer.ServeHTTP(w, r)
-			// } else {
-			// 	panic("Unimplemented: Run")
-			// 		httpServer.ServeHTTP(w, r)
-		}
-	}))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", p.port))
+	if err != nil {
+		p.log.Fatal().Err(err).Int("port", p.port).Msg("can't listen to port")
+	}
+	return grpcServer.Serve(lis)
+	// return http.ListenAndServe(fmt.Sprintf(":%d", p.port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+	// 		grpcServer.ServeHTTP(w, r)
+	// 		// } else {
+	// 		// 	panic("Unimplemented: Run")
+	// 		// 		httpServer.ServeHTTP(w, r)
+	// 	}
+	// }))
 }
 
 // type flagSlice []string

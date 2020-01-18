@@ -9,6 +9,7 @@ import (
 )
 
 func (p *Primary) Identity(ctx context.Context, r *api.IdentityRequest) (*api.IdentityResponse, error) {
+	p.log.Info().Msg("identity request")
 	return &api.IdentityResponse{
 		PrimaryId: p.name,
 	}, nil
@@ -19,6 +20,7 @@ func (p *Primary) Channels(ctx context.Context, r *api.ChannelRequest) (*api.Cha
 	nch := make([]string, len(ch))
 	copy(nch, ch)
 	p.localChan <- ch
+	p.log.Info().Strs("chans", nch).Msg("channel request")
 	return &api.ChannelResponse{
 		Channels: nch,
 	}, nil
@@ -39,8 +41,10 @@ func (p *Primary) Routes(r *api.RouteRequest, s api.Info_RoutesServer) error {
 		wr := <-p.wantRoutes
 		delete(wr, id)
 		p.wantRoutes <- wr
+		p.log.Info().Str("id", id).Msg("routes request unregistered")
 	}(id)
 
+	p.log.Info().Str("id", id).Msg("routes request registered")
 	<-s.Context().Done()
 	return nil
 }
@@ -79,8 +83,10 @@ func (p *Primary) PushStatus(s api.Info_PushStatusServer) error {
 		sec := <-p.secondaries
 		delete(sec, id)
 		p.secondaries <- sec
+		p.log.Info().Str("id", id).Msg("push status unregistered")
 	}(sr.Id)
 
+	p.log.Info().Str("id", sr.Id).Msg("push status registered")
 	<-s.Context().Done()
 	return nil
 }
@@ -100,6 +106,6 @@ func (p *Primary) PullStatus(s api.Info_PullStatusServer) error {
 		if err != nil {
 			return fmt.Errorf("PullStatus send: %w", err)
 		}
+		p.log.Info().Msg("pull status sent")
 	}
 }
-

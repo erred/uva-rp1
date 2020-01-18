@@ -1,6 +1,7 @@
 package primary
 
 import (
+	"github.com/seankhliao/uva-rp1/nfdstat"
 	"strings"
 	"time"
 )
@@ -12,6 +13,7 @@ func (p *Primary) scraper(first chan struct{}) {
 			break
 		}
 		p.log.Error().Err(err).Msg("first scrape")
+		time.Sleep(time.Second)
 	}
 	first <- struct{}{}
 	for range time.NewTicker(p.scrapeInterval).C {
@@ -23,26 +25,35 @@ func (p *Primary) scrape() error {
 	if err != nil {
 		return err
 	}
-	var chans []string
+	chans := make(map[string]struct{}, len(s.Channels.Channel))
 	for _, ch := range s.Channels.Channel {
 		scheme := ch.LocalUri[:3]
 		if scheme == "tcp" || scheme == "udp" {
 			i := strings.LastIndex(ch.LocalUri, ":")
-			chans = append(chans, scheme+"://"+p.localAddr+":"+ch.LocalUri[i+1:])
+			chans[scheme+"://"+p.localAddr+":"+ch.LocalUri[i+1:]] = struct{}{}
 		}
 	}
+	chs := make([]string, 0, len(chans))
+	for k := range chans {
+		chs = append(chs, k)
+	}
 	<-p.localChan
-	p.localChan <- chans
+	p.localChan <- chs
 
 	<-p.status
 	p.status <- s
 
 	rt := make(map[string]int64)
+	rts := make([]string, 0, len(s.Rib.RibEntry))
 	for _, re := range s.Rib.RibEntry {
 		if strings.HasPrefix(re.Prefix, "/local") {
 			continue
 		}
+		if re.Routes.Route.Origin == nfdstat.Origin {
+			continue
+		}
 		rt[re.Prefix] = re.Routes.Route.Cost
+		rts = append(rts, re.Prefix)
 	}
 
 	ort := <-p.localRoutes
@@ -69,6 +80,7 @@ func (p *Primary) scrape() error {
 			// don't block
 		}
 	}
+	// p.log.Info().Strs("chans", chans).Strs("routes", rts).Msg("scraped")
 	return nil
 }
 
@@ -84,6 +96,7 @@ func (p *Primary) routeAdvertiser() {
 				}
 			}(k, v)
 		}
+		p.log.Info().Int("wantRoutes", len(wr)).Int("routes", len(rt.Routes)).Msg("advertised routes")
 		p.wantRoutes <- wr
 	}
 }

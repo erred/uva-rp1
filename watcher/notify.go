@@ -15,7 +15,9 @@ func (w *Watcher) notify() {
 func (w *Watcher) notifier() {
 	for range w.notififcation {
 		ap := w.allPrimaries()
+
 		r := <-w.reflectors
+		rc := len(r)
 		for _, v := range r {
 			go func(v reflector) {
 				err := v.s.Send(ap)
@@ -25,7 +27,9 @@ func (w *Watcher) notifier() {
 			}(v)
 		}
 		w.reflectors <- r
+
 		p := <-w.primaries
+		pc := len(p)
 		for _, v := range p {
 			go func(v primary) {
 				err := v.s.Send(ap)
@@ -35,6 +39,8 @@ func (w *Watcher) notifier() {
 			}(v)
 		}
 		w.primaries <- p
+
+		w.log.Info().Int("reflectors", rc).Int("primaries", pc).Msg("notified")
 	}
 }
 

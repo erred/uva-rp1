@@ -9,8 +9,10 @@ import (
 func (w *Watcher) SavePromSD() error {
 	ap := w.allPrimaries()
 
+	es := make([]string, 0, len(ap.Primaries))
 	sd := make([]prometheusService, 0, len(ap.Primaries))
 	for _, p := range ap.Primaries {
+		es = append(es, p.Endpoint)
 		sd = append(sd, prometheusService{
 			Targets: []string{p.Endpoint},
 			Labels:  map[string]string{"primary_id": p.PrimaryId},
@@ -24,6 +26,7 @@ func (w *Watcher) SavePromSD() error {
 	if err != nil {
 		return fmt.Errorf("write prom sd %s: %w", w.promfile, err)
 	}
+	w.log.Info().Strs("endpoints", es).Msg("wrote prom file_sd")
 	return nil
 }
 

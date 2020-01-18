@@ -21,6 +21,7 @@ func (s *Secondary) recvCmd(c api.Info_RegisterClient) error {
 			*p, nil, "", nil,
 		}
 	}
+
 	var connect, disconnect []primary
 	op := <-s.primaries
 	for pid, p := range op {
@@ -34,6 +35,8 @@ func (s *Secondary) recvCmd(c api.Info_RegisterClient) error {
 		}
 	}
 	s.primaries <- op
+	s.log.Info().Int("primaries", len(rc.Primaries)).Int("connect", len(connect)).Int("disconnect", len(disconnect)).Msg("cmd recv")
+
 	for _, p := range connect {
 		go s.connect(p)
 	}
@@ -53,8 +56,9 @@ func (s *Secondary) disconnect(p primary) {
 	ctx := context.Background()
 	err := nfdstat.DelFace(ctx, p.ch)
 	if err != nil {
-		s.log.Error().Err(err).Str("id", p.p.PrimaryId).Msg("disconnect del")
+		s.log.Error().Err(err).Str("id", p.p.PrimaryId).Msg("disconnect del face")
 	}
+	s.log.Info().Str("primary", p.p.PrimaryId).Msg("disconnected")
 }
 
 func (s *Secondary) connect(p primary) {
@@ -79,6 +83,7 @@ func (s *Secondary) connect(p primary) {
 		p.conn.Close()
 		return
 	}
+	s.log.Info().Str("primary", p.p.PrimaryId).Strs("chans", cr.Channels).Msg("primary connected")
 
 	for _, ch := range cr.Channels {
 		err = nfdstat.AddFace(ctx, ch)
@@ -112,9 +117,12 @@ func (s *Secondary) routeUpdater(id, ch string, c api.Info_RoutesClient) {
 			return
 		}
 		nrts := make(map[string]int64, len(rt.Routes))
+		lrts := make([]string, 0, len(rt.Routes))
 		for _, r := range rt.Routes {
+			lrts = append(lrts, r.Prefix)
 			nrts[r.Prefix] = r.Cost
 		}
+		s.log.Info().Str("primary", id).Str("chan", ch).Strs("routes", lrts).Msg("routes recv")
 
 		var connect, disconnect []string
 		for r := range rts {
@@ -128,6 +136,7 @@ func (s *Secondary) routeUpdater(id, ch string, c api.Info_RoutesClient) {
 			}
 		}
 
+		s.log.Info().Strs("connect", connect).Strs("disconnect", disconnect).Msg("routes delta")
 		for _, r := range connect {
 			err = nfdstat.AddRoute(ctx, r, ch, nrts[r])
 			if err != nil {

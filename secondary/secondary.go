@@ -8,9 +8,8 @@ import (
 	"github.com/seankhliao/uva-rp1/api"
 	"github.com/seankhliao/uva-rp1/nfdstat"
 	"google.golang.org/grpc"
-	"math/rand"
+	"net"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -55,8 +54,17 @@ func New(args []string, logger *zerolog.Logger) *Secondary {
 	fs := flag.NewFlagSet("secondary", flag.ExitOnError)
 	fs.StringVar(&s.primary, "primary", "145.100.104.117:8000", "host:port of primaary to connect to")
 	fs.StringVar(&s.strategy, "strategy", "/localhost/nfd/strategy/asf", "set routing strategy")
-	fs.StringVar(&s.name, "name", strconv.FormatInt(rand.Int63(), 10), "overrdide randomly generated name of node")
+	fs.StringVar(&s.name, "name", "", "overrdide randomly generated name of node")
 	fs.Parse(args)
+	if s.name == "" {
+		addr, err := interfaceAddrs()
+		if err != nil {
+			s.log.Fatal().Err(err).Msg("")
+		}
+		s.name = addr
+	}
+
+	s.log.Info().Str("name", s.name).Str("primary", s.primary).Str("strategy", s.strategy).Msg("created")
 	return s
 }
 
@@ -66,12 +74,13 @@ func (s *Secondary) Run() error {
 	for {
 		err := nfdstat.RouteStrategy(context.Background(), "/", s.strategy)
 		if err != nil {
-			s.log.Error().Err(err).Str("prefix", "/").Str("strategy", s.strategy).Msg("set strategy")
+			s.log.Error().Err(err).Str("strategy", s.strategy).Msg("set default strategy")
 			time.Sleep(time.Second)
 			continue
 		}
 		break
 	}
+	s.log.Info().Str("strategy", s.strategy).Msg("default strategy set")
 	retry := time.Second
 	for {
 		connected, err := s.run()
@@ -81,7 +90,7 @@ func (s *Secondary) Run() error {
 		}
 		s.log.Error().Err(err).Dur("backoff", retry).Msg("run")
 		time.Sleep(retry)
-		if retry < 32*time.Second {
+		if retry < 16*time.Second {
 			retry *= 2
 		}
 	}
@@ -96,6 +105,7 @@ func (s *Secondary) run() (bool, error) {
 		return false, fmt.Errorf("dial: %w", err)
 	}
 	defer conn.Close()
+	s.log.Info().Str("primary", s.primary).Msg("connected")
 
 	s.ctl = api.NewInfoClient(conn)
 
@@ -103,6 +113,7 @@ func (s *Secondary) run() (bool, error) {
 	if err != nil {
 		return true, fmt.Errorf("register: %w", err)
 	}
+	s.log.Info().Msg("registered")
 
 	go s.pushStatus()
 	for {
@@ -111,4 +122,31 @@ func (s *Secondary) run() (bool, error) {
 			return true, err
 		}
 	}
+}
+
+func interfaceAddrs() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", fmt.Errorf("interface addrs: %w", err)
+	}
+	var ip4, ip6 []string
+	for _, addr := range addrs {
+		an, ok := addr.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		if !an.IP.IsGlobalUnicast() {
+			continue
+		}
+		if i4 := an.IP.To4(); i4 != nil {
+			ip4 = append(ip4, i4.String())
+		} else {
+			ip6 = append(ip6, an.IP.String())
+		}
+	}
+	ips := append(ip4, ip6...)
+	if len(ips) == 0 {
+		return "", fmt.Errorf("no addresses found")
+	}
+	return ips[0], nil
 }

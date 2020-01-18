@@ -3,10 +3,9 @@ package watcher
 import (
 	"flag"
 	"fmt"
-	"math/rand"
-	"net/http"
+	"net"
+	// "net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -46,11 +45,20 @@ func New(args []string, logger *zerolog.Logger) *Watcher {
 	ws := flagslice(w.watchers)
 	fs := flag.NewFlagSet("watcher", flag.ExitOnError)
 	fs.StringVar(&w.promfile, "file", "/etc/prometheus/file_sd.json", "prometheus file sd path")
-	fs.StringVar(&w.name, "name", strconv.FormatInt(rand.Int63(), 10), "overrdide randomly generated name of node")
+	fs.StringVar(&w.name, "name", "", "id of node")
 	fs.IntVar(&w.port, "port", 8000, "port to serve on")
 	fs.Var(&ws, "watcher", "(repeatable) other watchers to connect to (full mesh)")
 	fs.Parse(args)
 
+	if w.name == "" {
+		addr, err := interfaceAddrs()
+		if err != nil {
+			w.log.Fatal().Msg("no name found")
+		}
+		w.name = addr
+	}
+
+	w.log.Info().Str("name", w.name).Int("port", w.port).Str("file_sd", w.promfile).Strs("watchers", w.watchers).Msg("created")
 	return w
 }
 
@@ -67,11 +75,16 @@ func (w *Watcher) Run() error {
 	api.RegisterReflectorServer(grpcServer, w)
 
 	w.log.Info().Int("port", w.port).Msg("serving")
-	return http.ListenAndServe(fmt.Sprintf(":%d", w.port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			grpcServer.ServeHTTP(w, r)
-		}
-	}))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", w.port))
+	if err != nil {
+		w.log.Fatal().Err(err).Int("port", w.port).Msg("can't listen to port")
+	}
+	return grpcServer.Serve(lis)
+	// return http.ListenAndServe(fmt.Sprintf(":%d", w.port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	if strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+	// 		grpcServer.ServeHTTP(w, r)
+	// 	}
+	// }))
 }
 
 type gossiper interface {
@@ -102,4 +115,31 @@ func (f *flagslice) String() string {
 func (f *flagslice) Set(s string) error {
 	*f = append(*f, s)
 	return nil
+}
+
+func interfaceAddrs() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", fmt.Errorf("interface addrs: %w", err)
+	}
+	var ip4, ip6 []string
+	for _, addr := range addrs {
+		an, ok := addr.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		if !an.IP.IsGlobalUnicast() {
+			continue
+		}
+		if i4 := an.IP.To4(); i4 != nil {
+			ip4 = append(ip4, i4.String())
+		} else {
+			ip6 = append(ip6, an.IP.String())
+		}
+	}
+	ips := append(ip4, ip6...)
+	if len(ips) == 0 {
+		return "", fmt.Errorf("no addresses found")
+	}
+	return ips[0], nil
 }

@@ -8,5 +8,5 @@ import (
 )
 
 func main() {
-	log.Fatal(watcher.New(os.Args, nil).Run())
+	log.Fatal(watcher.New(os.Args[1:], nil).Run())
 }

@@ -26,4 +26,7 @@ RUN git clone --depth 1 --branch NFD-0.7.0 --recursive https://github.com/named-
 COPY conf /
 ENV NDN_AUTOCONFIG_DISABLED=1 \
     NDN_AUTOCONFIG_SERVER_DISABLED=1
+
+# 6363/tcp
+EXPOSE 6363/udp 6363/tcp
 ENTRYPOINT /entrypoint

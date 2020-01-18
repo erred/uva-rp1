@@ -1,5 +1,5 @@
 .PHONY: all
-all: secondary watcher grafana
+all: primary secondary watcher grafana
 
 
 
@@ -22,6 +22,9 @@ grafana:
 .PHONY: traffic
 traffic:
 	docker built -t seankhliao/ndn-traffic deploy/traffic
+.PHONY: primary
+primary: go nfd
+	docker build -t seankhliao/ndn-primary deploy/primary
 .PHONY: secondary
 secondary: go nfd
 	docker build -t seankhliao/ndn-secondary deploy/secondary

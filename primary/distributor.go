@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/seankhliao/uva-rp1/api"
+	"github.com/seankhliao/uva-rp1/nfdstat"
 	"google.golang.org/grpc"
 )
 
@@ -112,7 +113,88 @@ func (p *Primary) watcherConnect() bool {
 
 func (p *Primary) distributor() {
 	// set initial strategy
+	nsec := 1
+	pr := make(map[string]primary)
 	for range p.secondaryNotify {
-		// TODO: distribute endpoints to secondaries
+		var all, connect, disconnect []primary
+
+		prs := <-p.primaries
+		for k, v := range prs {
+			all = append(all, v)
+			if _, ok := pr[k]; !ok {
+				connect = append(connect, v)
+				pr[k] = v
+			}
+		}
+		for k, v := range pr {
+			if _, ok := prs[k]; !ok {
+				disconnect = append(disconnect, v)
+				delete(pr, k)
+			}
+		}
+		p.primaries <- prs
+
+		secs := <-p.secondaries
+		if nsec < 2 && len(secs) >= 2 {
+			// apply multi strategy
+			err := nfdstat.RouteStrategy(context.Background(), "/", p.multiStrategy)
+			if err != nil {
+				p.log.Error().Err(err).Msg("apply strategy")
+			}
+		} else if nsec >= 2 && len(secs) < 2 {
+			// apply single strategy
+			err := nfdstat.RouteStrategy(context.Background(), "/", p.singleStrategy)
+			if err != nil {
+				p.log.Error().Err(err).Msg("apply strategy")
+			}
+		}
+
+		ctr := make(map[string]int, len(secs))
+		for k, v := range secs {
+			for _, pri := range disconnect {
+				if _, ok := v.p[pri.p.PrimaryId]; ok {
+					delete(v.p, pri.p.PrimaryId)
+				}
+			}
+			secs[k] = v
+			ctr[k] = len(v.p)
+		}
+		for _, pri := range connect {
+			k := mapmin(ctr)
+			ctr[k]++
+			v := secs[k]
+			v.p[k] = pri
+			secs[k] = v
+		}
+		for id, sec := range secs {
+			go func(id string, sec secondary) {
+				prims := make([]*api.Primary, len(sec.p))
+				for _, pri := range sec.p {
+					prims = append(prims, &pri.p)
+				}
+				err := sec.c.Send(&api.RegisterControl{
+					Primaries: prims,
+				})
+				if err != nil {
+					p.log.Error().Err(err).Str("secondary", id).Msg("send primaries")
+				}
+			}(id, sec)
+		}
+		nsec = len(secs)
+		p.secondaries <- secs
 	}
+}
+
+func mapmin(d map[string]int) string {
+	s, m := "", 0
+	for k, v := range d {
+		s, m = k, v
+		break
+	}
+	for k, v := range d {
+		if v < m {
+			s, m = k, v
+		}
+	}
+	return s
 }

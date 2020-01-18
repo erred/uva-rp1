@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/seankhliao/uva-rp1/api"
 	"github.com/seankhliao/uva-rp1/nfdstat"
+	pkgsec "github.com/seankhliao/uva-rp1/secondary"
 	"google.golang.org/grpc"
 )
 
@@ -32,7 +33,8 @@ type secondary struct {
 type Primary struct {
 	scrapeInterval time.Duration
 	name           string
-	strategy       string
+	singleStrategy string
+	multiStrategy  string
 	localAddr      string
 	watcherAddr    string
 	port           int
@@ -92,7 +94,8 @@ func New(args []string, logger *zerolog.Logger) *Primary {
 	fs := flag.NewFlagSet("primary", flag.ExitOnError)
 	fs.DurationVar(&p.scrapeInterval, "scrape", 15*time.Second, "scrape interval")
 	fs.StringVar(&p.name, "name", strconv.FormatInt(rand.Int63(), 10), "overrdide randomly generated name of node")
-	fs.StringVar(&p.strategy, "strategy", "/localhost/nfd/strategy/access-router", "default strategy")
+	fs.StringVar(&p.singleStrategy, "single.strategy", "/localhost/nfd/strategy/asf", "default strategy")
+	fs.StringVar(&p.multiStrategy, "multi.strategy", "/localhost/nfd/strategy/access", "default strategy")
 	fs.StringVar(&p.watcherAddr, "watcher", "145.100.104.117:8000", "host:port of watcher to connect to")
 	fs.StringVar(&p.localAddr, "addr", defaultIP, "public ip to announce")
 	fs.IntVar(&p.port, "port", 8000, "port to serve on")
@@ -111,6 +114,9 @@ func (p *Primary) Run() error {
 	<-first
 	go p.routeAdvertiser()
 	go p.primaryDiscoverer()
+
+	args := []string{"-primary", fmt.Sprint("%s:%d", p.localAddr, p.port), "-strategy", p.singleStrategy}
+	go pkgsec.New(args, nil).Run()
 
 	// TODO: register prometheus metrics
 	// httpServer := http.ServeMux{}

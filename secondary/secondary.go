@@ -99,12 +99,12 @@ func (s *Secondary) run() (bool, error) {
 
 	s.ctl = api.NewInfoClient(conn)
 
-	go s.pushStatus()
-
 	c, err := s.ctl.Register(ctx, &api.RegisterRequest{})
 	if err != nil {
 		return true, fmt.Errorf("register: %w", err)
 	}
+
+	go s.pushStatus()
 	for {
 		err = s.recvCmd(c)
 		if err != nil {

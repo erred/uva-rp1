@@ -85,6 +85,8 @@ message StatusResponse {
   int64 pkt_out_nack = 18;
   int64 bytes_in = 19;
   int64 bytes_out = 20;
+
+  string id = 21;
 }
 
 message RegisterRequest {

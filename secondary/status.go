@@ -1,8 +1,11 @@
 package secondary
 
-import "context"
+import (
+	"context"
 
-import "github.com/seankhliao/uva-rp1/nfdstat"
+	"github.com/seankhliao/uva-rp1/api"
+	"github.com/seankhliao/uva-rp1/nfdstat"
+)
 
 func (s *Secondary) pushStatus() {
 	var stat *nfdstat.Status
@@ -22,7 +25,7 @@ func (s *Secondary) pushStatus() {
 		return
 	}
 
-	err = c.Send(stat.ToStatusResponse())
+	err = c.Send(&api.StatusResponse{Id: s.name})
 	if err != nil {
 		s.log.Error().Err(err).Msg("push initial status")
 	}

@@ -1,8 +1,18 @@
-.PHONY: connect-server
-connect-server:
-	docker-compose exec primary1 nfdc face create udp://172.20.0.12
-	docker-compose exec primary1 nfdc route add /rp1/server1 udp://172.20.0.12
-	docker-compose exec primary2 nfdc face create udp://172.20.0.22
-	docker-compose exec primary2 nfdc route add /rp1/server2 udp://172.20.0.22
-	docker-compose exec primary3 nfdc face create udp://172.20.0.32
-	docker-compose exec primary3 nfdc route add /rp1/server3 udp://172.20.0.32
+.PHONY: connect
+connect: producer consumer
+
+.PHONY: up
+up:
+	docker-compose up
+.PHONY: down
+down:
+	docker-compose down
+
+.PHONY: producer
+producer:
+	docker-compose exec primary1 nfdc face create udp://172.21.1.21
+	docker-compose exec primary1 nfdc route add /producer/1/a udp://172.21.1.21
+.PHONY: consumer
+consumer:
+	docker-compose exec consumer1a nfdc face create udp://172.21.1.1
+	docker-compose exec consumer1a nfdc route add / udp://172.21.1.1

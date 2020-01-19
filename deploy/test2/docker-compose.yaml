@@ -4,83 +4,66 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: "172.21.0.0/16"
+        - subnet: "172.22.0.0/16"
 
 services:
   watcher1:
-    container_name: watcher1
     image: seankhliao/ndn-watcher
     expose:
       - "8000"
       - "9090"
     networks:
       servers:
-        ipv4_address: "172.21.0.2"
+        ipv4_address: "172.22.0.2"
 
   primary1:
-    container_name: primary1
     image: seankhliao/ndn-primary
     expose:
       - "6363"
       - "8000"
     networks:
       servers:
-        ipv4_address: "172.21.1.1"
+        ipv4_address: "172.22.1.1"
     environment:
-      WATCHER: "172.21.0.2:8000"
+      WATCHER: "172.22.0.2:8000"
 
   secondary1a:
-    container_name: secondary1a
     image: seankhliao/ndn-secondary
     expose:
       - "6363"
       - "56363"
     networks:
       servers:
-        ipv4_address: "172.21.1.11"
+        ipv4_address: "172.22.1.11"
     environment:
-      PRIMARY: "172.21.1.1:8000"
+      PRIMARY: "172.22.1.1:8000"
   secondary1b:
-    container_name: secondary1b
     image: seankhliao/ndn-secondary
     expose:
       - "6363"
       - "56363"
     networks:
       servers:
-        ipv4_address: "172.21.1.12"
+        ipv4_address: "172.22.1.12"
     environment:
-      PRIMARY: "172.21.1.1:8000"
-  secondary1c:
-    container_name: secondary1c
-    image: seankhliao/ndn-secondary
-    expose:
-      - "6363"
-      - "56363"
-    networks:
-      servers:
-        ipv4_address: "172.21.1.13"
-    environment:
-      PRIMARY: "172.21.1.1:8000"
+      PRIMARY: "172.22.1.1:8000"
 
   producer1a:
-    container_name: producer1a
     image: seankhliao/ndn-traffic
     networks:
       servers:
-        ipv4_address: "172.21.1.21"
+        ipv4_address: "172.22.1.21"
     volumes:
-      - ./producer1a/ndn:/usr/local/etc/ndn
+      - ./producer1a:/usr/local/etc/ndn
     environment:
       NDN_TRAFFIC_SERVER_DISABLED: ""
 
   consumer1a:
-    container_name: consumer1a
     image: seankhliao/ndn-traffic
     networks:
       servers:
-        ipv4_address: "172.21.1.31"
+        ipv4_address: "172.22.1.31"
     volumes:
-      - ./consumer1a/ndn:/usr/local/etc/ndn
+      - ./consumer1a:/usr/local/etc/ndn
     environment:
       NDN_TRAFFIC_CLIENT_DISABLED: ""

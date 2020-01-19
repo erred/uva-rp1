@@ -109,7 +109,9 @@ func (s *Secondary) run() (bool, error) {
 
 	s.ctl = api.NewInfoClient(conn)
 
-	c, err := s.ctl.Register(ctx, &api.RegisterRequest{})
+	c, err := s.ctl.Register(ctx, &api.RegisterRequest{
+		SecondaryId: s.name,
+	})
 	if err != nil {
 		return true, fmt.Errorf("register: %w", err)
 	}

@@ -13,7 +13,7 @@ go: api/primary.pb.go
 	docker build -t seankhliao/ndn-mesh .
 .PHONY: nfd
 nfd:
-	docker build -t seankhliao/ndn-base deploy/nfd
+	docker build -t seankhliao/ndn-nfd deploy/nfd
 .PHONY: grafana
 grafana:
 	docker build -t seankhliao/ndn-grafana deploy/grafana
@@ -34,7 +34,7 @@ watcher: go nfd
 
 .PHONY: push
 push:
-	docker push seankhliao/ndn-base
+	docker push seankhliao/ndn-nfd
 	docker push seankhliao/ndn-mesh
 	docker push seankhliao/ndn-grafana
 	docker push seankhliao/ndn-traffic
@@ -43,7 +43,7 @@ push:
 	docker push seankhliao/ndn-watcher
 .PHONY: pull
 pull:
-	docker pull seankhliao/ndn-base
+	docker pull seankhliao/ndn-nfd
 	docker pull seankhliao/ndn-mesh
 	docker pull seankhliao/ndn-grafana
 	docker pull seankhliao/ndn-traffic

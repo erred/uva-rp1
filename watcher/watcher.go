@@ -16,10 +16,10 @@ import (
 )
 
 type Watcher struct {
-	promfile string
-	name     string
-	port     int
-	watchers []string
+	watchers  []string
+	promfile  string
+	localAddr string
+	port      int
 
 	primaries     chan map[string]primary
 	reflectors    chan map[string]reflector
@@ -39,31 +39,39 @@ func New(args []string, logger *zerolog.Logger) *Watcher {
 		notififcation: make(chan struct{}, 1),
 		log:           logger,
 	}
+
 	w.primaries <- make(map[string]primary)
 	w.reflectors <- make(map[string]reflector)
+
+	ips, err := localIPs()
+	if err != nil {
+		w.log.Fatal().
+			Err(err).
+			Msg("no known public ip to announce")
+	} else if len(ips) > 0 {
+		w.localAddr = ips[0]
+	}
 
 	ws := flagslice(w.watchers)
 	fs := flag.NewFlagSet("watcher", flag.ExitOnError)
 	fs.StringVar(&w.promfile, "file", "/etc/prometheus/file_sd.json", "prometheus file sd path")
-	fs.StringVar(&w.name, "name", "", "id of node")
 	fs.IntVar(&w.port, "port", 8000, "port to serve on")
 	fs.Var(&ws, "watcher", "(repeatable) other watchers to connect to (full mesh)")
 	fs.Parse(args)
 
-	if w.name == "" {
-		addr, err := interfaceAddrs()
-		if err != nil {
-			w.log.Fatal().Msg("no name found")
-		}
-		w.name = addr
-	}
-
-	w.log.Info().Str("name", w.name).Int("port", w.port).Str("file_sd", w.promfile).Strs("watchers", w.watchers).Msg("created")
+	w.log.Info().
+		Str("file_sd", w.promfile).
+		Strs("watchers", w.watchers).
+		Str("addr", w.localAddr).
+		Int("port", w.port).
+		Msg("initialized")
 	return w
 }
 
 func (w *Watcher) Run() error {
-	w.log.Info().Msg("starting run")
+	w.log.Info().
+		Str("id", w.localAddr).
+		Msg("starting watcher")
 
 	go w.notifier()
 
@@ -74,17 +82,14 @@ func (w *Watcher) Run() error {
 	grpcServer := grpc.NewServer()
 	api.RegisterReflectorServer(grpcServer, w)
 
-	w.log.Info().Int("port", w.port).Msg("serving")
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", w.port))
 	if err != nil {
-		w.log.Fatal().Err(err).Int("port", w.port).Msg("can't listen to port")
+		w.log.Fatal().
+			Err(err).
+			Int("port", w.port).
+			Msg("can't listen to port")
 	}
 	return grpcServer.Serve(lis)
-	// return http.ListenAndServe(fmt.Sprintf(":%d", w.port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	if strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-	// 		grpcServer.ServeHTTP(w, r)
-	// 	}
-	// }))
 }
 
 type gossiper interface {
@@ -117,10 +122,10 @@ func (f *flagslice) Set(s string) error {
 	return nil
 }
 
-func interfaceAddrs() (string, error) {
+func localIPs() ([]string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return "", fmt.Errorf("interface addrs: %w", err)
+		return nil, fmt.Errorf("localIPs: %w", err)
 	}
 	var ip4, ip6 []string
 	for _, addr := range addrs {
@@ -137,9 +142,5 @@ func interfaceAddrs() (string, error) {
 			ip6 = append(ip6, an.IP.String())
 		}
 	}
-	ips := append(ip4, ip6...)
-	if len(ips) == 0 {
-		return "", fmt.Errorf("no addresses found")
-	}
-	return ips[0], nil
+	return append(ip4, ip6...), nil
 }

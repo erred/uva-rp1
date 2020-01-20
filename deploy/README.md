@@ -54,6 +54,18 @@ secondary1b ─┘     │                      │      └─ secondary2c
 ### test4
 
 ```
+                                                             watcher1
+                                                                │
+                   ┌──────────────────────┬─────────────────────┴────────────────────┬──────────────────────┐
+secondary1a ─┬─ primary1               primary2 ─┬─ secondary2a   secondary3a ─┬─ primary3               primary4 ─┬─ secondary4a
+secondary1b ─┘     │                      │      └─ secondary2b   secondary3b ─┘     │                      │      └─ secondary4b
+             ┌─────┴─────┐          ┌─────┴─────┐                              ┌─────┴─────┐          ┌─────┴─────┐
+         producer1a   client1a  producer2a   client2a                      producer3a   client3a  producer4a   client4a
+```
+
+### test5
+
+```
                            watcher1 ─────────────────────────────────────────────────────── watcher2
                               │                                                                │
                    ┌──────────┴───────────┐                                         ┌──────────┴───────────┐

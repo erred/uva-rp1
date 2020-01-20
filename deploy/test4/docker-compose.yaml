@@ -1,0 +1,225 @@
+version: "3.7"
+networks:
+  servers:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.24.0.0/16"
+
+services:
+  watcher1:
+    image: seankhliao/ndn-watcher
+    expose:
+      - "8000"
+      - "9090"
+    networks:
+      servers:
+        ipv4_address: "172.24.0.2"
+
+  primary1:
+    image: seankhliao/ndn-primary
+    expose:
+      - "6363"
+      - "8000"
+    networks:
+      servers:
+        ipv4_address: "172.24.1.1"
+    environment:
+      WATCHER: "172.24.0.2:8000"
+
+  secondary1a:
+    image: seankhliao/ndn-secondary
+    expose:
+      - "6363"
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.24.1.11"
+    environment:
+      PRIMARY: "172.24.1.1:8000"
+  secondary1b:
+    image: seankhliao/ndn-secondary
+    expose:
+      - "6363"
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.24.1.12"
+    environment:
+      PRIMARY: "172.24.1.1:8000"
+
+  producer1a:
+    image: seankhliao/ndn-traffic
+    networks:
+      servers:
+        ipv4_address: "172.24.1.21"
+    volumes:
+      - ./producer1a:/usr/local/etc/ndn
+    environment:
+      NDN_TRAFFIC_SERVER_DISABLED: ""
+
+  consumer1a:
+    image: seankhliao/ndn-traffic
+    networks:
+      servers:
+        ipv4_address: "172.24.1.31"
+    volumes:
+      - ./consumer1a:/usr/local/etc/ndn
+    environment:
+      NDN_TRAFFIC_CLIENT_DISABLED: ""
+
+  primary2:
+    image: seankhliao/ndn-primary
+    expose:
+      - "6363"
+      - "8000"
+    networks:
+      servers:
+        ipv4_address: "172.24.2.1"
+    environment:
+      WATCHER: "172.24.0.2:8000"
+
+  secondary2a:
+    image: seankhliao/ndn-secondary
+    expose:
+      - "6363"
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.24.2.11"
+    environment:
+      PRIMARY: "172.24.2.1:8000"
+  secondary2b:
+    image: seankhliao/ndn-secondary
+    expose:
+      - "6363"
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.24.2.12"
+    environment:
+      PRIMARY: "172.24.2.1:8000"
+
+  producer2a:
+    image: seankhliao/ndn-traffic
+    networks:
+      servers:
+        ipv4_address: "172.24.2.21"
+    volumes:
+      - ./producer2a:/usr/local/etc/ndn
+    environment:
+      NDN_TRAFFIC_SERVER_DISABLED: ""
+
+  consumer2a:
+    image: seankhliao/ndn-traffic
+    networks:
+      servers:
+        ipv4_address: "172.24.2.31"
+    volumes:
+      - ./consumer2a:/usr/local/etc/ndn
+    environment:
+      NDN_TRAFFIC_CLIENT_DISABLED: ""
+
+  primary3:
+    image: seankhliao/ndn-primary
+    expose:
+      - "6363"
+      - "8000"
+    networks:
+      servers:
+        ipv4_address: "172.24.3.1"
+    environment:
+      WATCHER: "172.24.0.2:8000"
+
+  secondary3a:
+    image: seankhliao/ndn-secondary
+    expose:
+      - "6363"
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.24.3.11"
+    environment:
+      PRIMARY: "172.24.3.1:8000"
+  secondary3b:
+    image: seankhliao/ndn-secondary
+    expose:
+      - "6363"
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.24.3.12"
+    environment:
+      PRIMARY: "172.24.3.1:8000"
+
+  producer3a:
+    image: seankhliao/ndn-traffic
+    networks:
+      servers:
+        ipv4_address: "172.24.3.21"
+    volumes:
+      - ./producer3a:/usr/local/etc/ndn
+    environment:
+      NDN_TRAFFIC_SERVER_DISABLED: ""
+
+  consumer3a:
+    image: seankhliao/ndn-traffic
+    networks:
+      servers:
+        ipv4_address: "172.24.3.31"
+    volumes:
+      - ./consumer3a:/usr/local/etc/ndn
+    environment:
+      NDN_TRAFFIC_CLIENT_DISABLED: ""
+
+  primary4:
+    image: seankhliao/ndn-primary
+    expose:
+      - "6363"
+      - "8000"
+    networks:
+      servers:
+        ipv4_address: "172.24.4.1"
+    environment:
+      WATCHER: "172.24.0.2:8000"
+
+  secondary4a:
+    image: seankhliao/ndn-secondary
+    expose:
+      - "6363"
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.24.4.11"
+    environment:
+      PRIMARY: "172.24.4.1:8000"
+  secondary4b:
+    image: seankhliao/ndn-secondary
+    expose:
+      - "6363"
+      - "56363"
+    networks:
+      servers:
+        ipv4_address: "172.24.4.12"
+    environment:
+      PRIMARY: "172.24.4.1:8000"
+
+  producer4a:
+    image: seankhliao/ndn-traffic
+    networks:
+      servers:
+        ipv4_address: "172.24.4.21"
+    volumes:
+      - ./producer4a:/usr/local/etc/ndn
+    environment:
+      NDN_TRAFFIC_SERVER_DISABLED: ""
+
+  consumer4a:
+    image: seankhliao/ndn-traffic
+    networks:
+      servers:
+        ipv4_address: "172.24.4.31"
+    volumes:
+      - ./consumer4a:/usr/local/etc/ndn
+    environment:
+      NDN_TRAFFIC_CLIENT_DISABLED: ""

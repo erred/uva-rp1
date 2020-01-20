@@ -2,55 +2,98 @@ package secondary
 
 import (
 	"context"
+	"strings"
 
 	"github.com/seankhliao/uva-rp1/api"
 	"github.com/seankhliao/uva-rp1/nfdstat"
 )
 
-func (s *Secondary) pushStatus() {
+func (s *Secondary) statusPusher() {
 	var stat *nfdstat.Status
 	var err error
 	for {
 		stat, err = s.stat.Status()
 		if err != nil {
-			s.log.Error().Err(err).Msg("get status initial")
+			s.log.Error().
+				Err(err).
+				Msg("statusPusher get init")
 			continue
 		}
 		break
 	}
-	s.log.Info().Msg("get status initial")
+	s.log.Info().Msg("statusPusher got init")
+
 	c, err := s.ctl.PushStatus(context.Background())
 	if err != nil {
-		s.log.Error().Err(err).Msg("push status")
+		s.log.Error().
+			Err(err).
+			Msg("statusPusher connect")
 		return
 	}
-	s.log.Info().Msg("push status connected")
+	s.log.Info().Msg("statusPusher connected")
 
-	err = c.Send(&api.StatusResponse{Id: s.name})
+	err = c.Send(&api.StatusResponse{Id: s.localAddr})
 	if err != nil {
-		s.log.Error().Err(err).Msg("push initial status")
+		s.log.Error().
+			Err(err).
+			Msg("statusPusher send init")
 	}
-	s.log.Info().Msg("push status initial sent")
 
+	s.log.Info().Msg("statusPusher waiting for recv")
 	for {
 		_, err := c.Recv()
 		if err != nil {
-			s.log.Error().Err(err).Msg("push status recv")
+			s.log.Error().
+				Err(err).
+				Msg("statusPusher recv")
 			return
 		}
 
 		for {
 			stat, err = s.stat.Status()
 			if err != nil {
-				s.log.Error().Err(err).Msg("nfd status")
+				s.log.Error().
+					Err(err).
+					Msg("statusPusher nfd status")
 				continue
 			}
 			break
 		}
 		err = c.Send(stat.ToStatusResponse())
 		if err != nil {
-			s.log.Error().Err(err).Msg("push status")
+			s.log.Error().Err(err).Msg("statusPusher send")
 		}
-		s.log.Info().Msg("push status send")
+		s.log.Debug().Msg("statusPusher sent")
+	}
+}
+
+func (s *Secondary) mustGetChannels() {
+	for {
+		stat, err := s.stat.Status()
+		if err != nil {
+			s.log.Error().
+				Err(err).
+				Msg("getChannels nfd status")
+			continue
+		}
+		chans := make(map[string]struct{}, len(stat.Channels.Channel))
+		for _, ch := range stat.Channels.Channel {
+			scheme := ch.LocalUri[:3]
+			if scheme == "tcp" || scheme == "udp" {
+				i := strings.LastIndex(ch.LocalUri, ":")
+				chans[scheme+"://"+s.localAddr+":"+ch.LocalUri[i+1:]] = struct{}{}
+			}
+		}
+		chs := make([]string, 0, len(chans))
+		for k := range chans {
+			chs = append(chs, k)
+		}
+		s.log.Info().
+			Strs("channels", chs).
+			Msg("getChannels got")
+
+		<-s.localChan
+		s.localChan <- chs
+		break
 	}
 }

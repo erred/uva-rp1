@@ -4,9 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"net"
-	// "net/http"
 	"os"
-	// "strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -22,18 +20,18 @@ type primary struct {
 	p api.Primary
 }
 type secondary struct {
-	p map[string]primary
-	c api.Info_RegisterServer
-	s api.Info_PushStatusServer
+	p   map[string]primary
+	c   api.Info_RegisterServer
+	s   api.Info_PushStatusServer
+	chs []string
 }
 
 type Primary struct {
 	scrapeInterval time.Duration
-	name           string
 	singleStrategy string
 	multiStrategy  string
-	localAddr      string
 	watcherAddr    string
+	localAddr      string
 	port           int
 
 	watcher api.Reflector_PrimariesClient
@@ -81,79 +79,62 @@ func New(args []string, logger *zerolog.Logger) *Primary {
 	p.wantRoutes <- make(map[string]wantRoute)
 	p.status <- nil
 
-	var defaultIP string
 	ips, err := localIPs()
 	if err != nil {
 		p.log.Fatal().Err(err).Msg("no known public ip to announce")
 	} else if len(ips) > 0 {
-		defaultIP = ips[0]
+		p.localAddr = ips[0]
 	}
 
 	fs := flag.NewFlagSet("primary", flag.ExitOnError)
 	fs.DurationVar(&p.scrapeInterval, "scrape", 15*time.Second, "scrape interval")
-	fs.StringVar(&p.name, "name", defaultIP, "overrdide randomly generated name of node")
 	fs.StringVar(&p.singleStrategy, "single.strategy", "/localhost/nfd/strategy/asf", "default strategy")
 	fs.StringVar(&p.multiStrategy, "multi.strategy", "/localhost/nfd/strategy/access", "default strategy")
-	fs.StringVar(&p.watcherAddr, "watcher", "145.100.104.117:8000", "host:port of watcher to connect to")
-	fs.StringVar(&p.localAddr, "addr", defaultIP, "public ip to announce")
+	fs.StringVar(&p.watcherAddr, "watcher", "0.0.0.0:8000", "host:port of watcher to connect to")
 	fs.IntVar(&p.port, "port", 8000, "port to serve on")
 	fs.Parse(args)
 
-	if p.localAddr == "" {
-		p.log.Fatal().Msg("no public ip addr found")
-	}
-
-	p.log.Info().Dur("interval", p.scrapeInterval).Str("name", p.name).Strs("strategy", []string{p.singleStrategy, p.multiStrategy}).Str("watcher", p.watcherAddr).Str("addr", p.localAddr).Int("port", p.port).Msg("created")
+	p.log.Info().
+		Dur("interval", p.scrapeInterval).
+		Strs("strategy", []string{p.singleStrategy, p.multiStrategy}).
+		Str("watcher", p.watcherAddr).
+		Str("addr", p.localAddr).
+		Int("port", p.port).
+		Msg("initialized")
 	return p
 }
 
 func (p *Primary) Run() error {
-	p.log.Info().Msg("starting run")
+	p.log.Info().Msg("starting primary")
 
 	go p.distributor()
 	first := make(chan struct{})
 	go p.scraper(first)
 	<-first
-	p.log.Info().Msg("first scrape")
 	go p.routeAdvertiser()
-	go p.primaryDiscoverer()
+	go p.reflectorClient()
 
 	// TODO: register prometheus metrics
 	// httpServer := http.ServeMux{}
 	// httpServer.Handle("/metrics", promhttp.Handler())
-	//
+
 	grpcServer := grpc.NewServer()
 	api.RegisterInfoServer(grpcServer, p)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", p.port))
 	if err != nil {
-		p.log.Fatal().Err(err).Int("port", p.port).Msg("can't listen to port")
+		p.log.Fatal().
+			Err(err).
+			Int("port", p.port).
+			Msg("can't listen to port")
 	}
 	return grpcServer.Serve(lis)
-	// return http.ListenAndServe(fmt.Sprintf(":%d", p.port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-	// 		grpcServer.ServeHTTP(w, r)
-	// 		// } else {
-	// 		// 	panic("Unimplemented: Run")
-	// 		// 		httpServer.ServeHTTP(w, r)
-	// 	}
-	// }))
 }
-
-// type flagSlice []string
-//
-// func (f *flagSlice) String() string {
-// 	return strings.Join(*f, ",")
-// }
-// func (f *flagSlice) Set(s string) error {
-// 	*f = append(*f, s)
-// 	return nil
-// }
 
 func localIPs() ([]string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return nil, fmt.Errorf("interface addrs: %w", err)
+		return nil, fmt.Errorf("localIPs: %w", err)
 	}
 	var ip4, ip6 []string
 	for _, addr := range addrs {

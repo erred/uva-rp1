@@ -14,15 +14,20 @@ func (w *Watcher) Primaries(p *api.Primary, s api.Reflector_PrimariesServer) err
 			w.primaries <- pr
 		}()
 		if _, ok := pr[p.PrimaryId]; ok {
-			err := fmt.Errorf("duplicate id: %s %s", p.PrimaryId, p.Endpoint)
-			w.log.Error().Err(err).Str("id", p.PrimaryId).Msg("primaries duplicate")
+			err := fmt.Errorf("duplicate id")
+			w.log.Error().
+				Err(err).
+				Str("id", p.PrimaryId).
+				Msg("handle primaries")
 			return err
 		}
 		pr[p.PrimaryId] = primary{
 			p, s,
 		}
 		w.notify()
-		w.log.Info().Str("id", p.PrimaryId).Str("endpoint", p.Endpoint).Msg("primaries registered")
+		w.log.Info().
+			Str("id", p.PrimaryId).
+			Msg("handle primaries registered")
 		return nil
 	}()
 	if err != nil {
@@ -34,7 +39,9 @@ func (w *Watcher) Primaries(p *api.Primary, s api.Reflector_PrimariesServer) err
 		delete(pr, id)
 		w.primaries <- pr
 		w.notify()
-		w.log.Info().Str("id", id).Msg("primaries unregistered")
+		w.log.Info().
+			Str("id", id).
+			Msg("handle primaries unregistered")
 	}(p.PrimaryId)
 
 	<-s.Context().Done()
@@ -52,7 +59,9 @@ func (w *Watcher) Gossip(s api.Reflector_GossipServer) error {
 		delete(r, id)
 		w.reflectors <- r
 		w.notify()
-		w.log.Info().Str("id", id).Msg("gossip unregistered")
+		w.log.Info().
+			Str("id", id).
+			Msg("handle gossip unregistered")
 	}(id)
 
 	return w.gossipRecv(id, s)
@@ -94,7 +103,9 @@ func (w *Watcher) gossiper(watcher string) {
 func (w *Watcher) gossipInitRecv(g gossiper) (string, error) {
 	ap, err := g.Recv()
 	if err != nil {
-		w.log.Error().Err(err).Msg("gossip init receive")
+		w.log.Error().
+			Err(err).
+			Msg("handle gossip recv init")
 	}
 
 	id := ap.WatcherId
@@ -103,15 +114,20 @@ func (w *Watcher) gossipInitRecv(g gossiper) (string, error) {
 		w.reflectors <- r
 	}()
 	if _, ok := r[ap.WatcherId]; ok {
-		err = fmt.Errorf("duplicate id: %s", id)
-		w.log.Error().Err(err).Str("id", id).Msg("gossip init duplicate")
+		err = fmt.Errorf("duplicate id")
+		w.log.Error().
+			Err(err).
+			Str("id", id).
+			Msg("handle gossip recv init")
 		return id, err
 	}
 	r[id] = reflector{
 		ap, g,
 	}
 	w.notify()
-	w.log.Info().Str("id", id).Msg("gossip registered")
+	w.log.Info().
+		Str("id", id).
+		Msg("handle gossip registered")
 	return id, nil
 }
 
@@ -119,7 +135,10 @@ func (w *Watcher) gossipRecv(id string, g gossipRecver) error {
 	for {
 		ap, err := g.Recv()
 		if err != nil {
-			w.log.Error().Err(err).Str("id", id).Msg("gossip recv")
+			w.log.Error().
+				Err(err).
+				Str("id", id).
+				Msg("handle gossip recv")
 			return err
 		}
 
@@ -129,6 +148,10 @@ func (w *Watcher) gossipRecv(id string, g gossipRecver) error {
 		r[id] = re
 		w.reflectors <- r
 		w.notify()
-		w.log.Info().Str("id", id).Msg("gosssip recv")
+
+		w.log.Info().
+			Str("id", id).
+			Int("primaries", len(ap.Primaries)).
+			Msg("gosssip recv")
 	}
 }

@@ -26,7 +26,9 @@ func (w *Watcher) SavePromSD() error {
 	if err != nil {
 		return fmt.Errorf("write prom sd %s: %w", w.promfile, err)
 	}
-	w.log.Info().Strs("endpoints", es).Msg("wrote prom file_sd")
+	w.log.Info().
+		Strs("endpoints", es).
+		Msg("wrote prom file_sd")
 	return nil
 }
 

@@ -25,10 +25,12 @@ type primary struct {
 }
 
 type Secondary struct {
-	primary  string
-	strategy string
-	name     string
+	strategy  string
+	primary   string
+	localAddr string
+	// port     int
 
+	localChan chan []string
 	primaries chan map[string]primary
 
 	ctl  api.InfoClient
@@ -43,52 +45,78 @@ func New(args []string, logger *zerolog.Logger) *Secondary {
 	}
 
 	s := &Secondary{
+		localChan: make(chan []string, 1),
 		primaries: make(chan map[string]primary, 1),
 
 		stat: nfdstat.New(),
 		log:  logger,
 	}
 
+	s.localChan <- nil
 	s.primaries <- make(map[string]primary)
 
-	fs := flag.NewFlagSet("secondary", flag.ExitOnError)
-	fs.StringVar(&s.primary, "primary", "145.100.104.117:8000", "host:port of primaary to connect to")
-	fs.StringVar(&s.strategy, "strategy", "/localhost/nfd/strategy/asf", "set routing strategy")
-	fs.StringVar(&s.name, "name", "", "overrdide randomly generated name of node")
-	fs.Parse(args)
-	if s.name == "" {
-		addr, err := interfaceAddrs()
-		if err != nil {
-			s.log.Fatal().Err(err).Msg("")
-		}
-		s.name = addr
+	ips, err := localIPs()
+	if err != nil {
+		s.log.Fatal().Err(err).Msg("no known public ip to announce")
+	} else if len(ips) > 0 {
+		s.localAddr = ips[0]
 	}
 
-	s.log.Info().Str("name", s.name).Str("primary", s.primary).Str("strategy", s.strategy).Msg("created")
+	fs := flag.NewFlagSet("secondary", flag.ExitOnError)
+	fs.StringVar(&s.strategy, "strategy", "/localhost/nfd/strategy/asf", "set routing strategy")
+	fs.StringVar(&s.primary, "primary", "0.0.0.0:8000", "host:port of primaary to connect to")
+	fs.Parse(args)
+
+	s.log.Info().
+		Str("strategy", s.strategy).
+		Str("primary", s.primary).
+		Str("addr", s.localAddr).
+		Msg("initialized")
 	return s
 }
 
 func (s *Secondary) Run() error {
-	s.log.Info().Msg("starting run")
-	// set default prefix
+	s.log.Info().
+		Str("id", s.localAddr).
+		Msg("starting secondary")
+
+	s.mustDefaultStrategy()
+	s.mustGetChannels()
+
+	s.registerRunner()
+	return nil
+}
+
+func (s *Secondary) mustDefaultStrategy() {
 	for {
 		err := nfdstat.RouteStrategy(context.Background(), "/", s.strategy)
 		if err != nil {
-			s.log.Error().Err(err).Str("strategy", s.strategy).Msg("set default strategy")
+			s.log.Error().
+				Err(err).
+				Str("strategy", s.strategy).
+				Msg("set default strategy")
 			time.Sleep(time.Second)
 			continue
 		}
 		break
 	}
-	s.log.Info().Str("strategy", s.strategy).Msg("default strategy set")
+	s.log.Info().
+		Str("strategy", s.strategy).
+		Msg("default strategy set")
+}
+
+func (s *Secondary) registerRunner() {
 	retry := time.Second
 	for {
-		connected, err := s.run()
+		connected, err := s.register()
 		if connected {
 			retry = time.Second
 
 		}
-		s.log.Error().Err(err).Dur("backoff", retry).Msg("run")
+		s.log.Error().
+			Err(err).
+			Dur("backoff", retry).
+			Msg("register runner")
 		time.Sleep(retry)
 		if retry < 16*time.Second {
 			retry *= 2
@@ -97,7 +125,7 @@ func (s *Secondary) Run() error {
 
 }
 
-func (s *Secondary) run() (bool, error) {
+func (s *Secondary) register() (bool, error) {
 	// establish connection
 	ctx := context.Background()
 	conn, err := grpc.DialContext(ctx, s.primary, grpc.WithInsecure(), grpc.WithBlock())
@@ -105,19 +133,28 @@ func (s *Secondary) run() (bool, error) {
 		return false, fmt.Errorf("dial: %w", err)
 	}
 	defer conn.Close()
-	s.log.Info().Str("primary", s.primary).Msg("connected")
 
 	s.ctl = api.NewInfoClient(conn)
 
+	ch := <-s.localChan
+	chs := make([]string, len(ch))
+	copy(chs, ch)
+	s.localChan <- ch
+
 	c, err := s.ctl.Register(ctx, &api.RegisterRequest{
-		SecondaryId: s.name,
+		SecondaryId: s.localAddr,
+		Channels:    chs,
 	})
 	if err != nil {
 		return true, fmt.Errorf("register: %w", err)
 	}
-	s.log.Info().Msg("registered")
 
-	go s.pushStatus()
+	s.log.Info().
+		Str("primary", s.primary).
+		Msg("registered")
+
+	go s.statusPusher()
+
 	for {
 		err = s.recvCmd(c)
 		if err != nil {
@@ -126,10 +163,10 @@ func (s *Secondary) run() (bool, error) {
 	}
 }
 
-func interfaceAddrs() (string, error) {
+func localIPs() ([]string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return "", fmt.Errorf("interface addrs: %w", err)
+		return nil, fmt.Errorf("localIPs: %w", err)
 	}
 	var ip4, ip6 []string
 	for _, addr := range addrs {
@@ -146,9 +183,5 @@ func interfaceAddrs() (string, error) {
 			ip6 = append(ip6, an.IP.String())
 		}
 	}
-	ips := append(ip4, ip6...)
-	if len(ips) == 0 {
-		return "", fmt.Errorf("no addresses found")
-	}
-	return ips[0], nil
+	return append(ip4, ip6...), nil
 }

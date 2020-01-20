@@ -12,7 +12,9 @@ func (p *Primary) scraper(first chan struct{}) {
 		if err == nil {
 			break
 		}
-		p.log.Error().Err(err).Msg("first scrape")
+		p.log.Error().
+			Err(err).
+			Msg("scraper init")
 		time.Sleep(time.Second)
 	}
 	first <- struct{}{}
@@ -80,7 +82,6 @@ func (p *Primary) scrape() error {
 			// don't block
 		}
 	}
-	// p.log.Info().Strs("chans", chans).Strs("routes", rts).Msg("scraped")
 	return nil
 }
 
@@ -92,11 +93,22 @@ func (p *Primary) routeAdvertiser() {
 			go func(k string, v wantRoute) {
 				err := v.s.Send(rt)
 				if err != nil {
-					p.log.Error().Err(err).Str("id", k).Msg("route send")
+					p.log.Error().
+						Err(err).
+						Str("id", k).
+						Msg("routeAdvertiser send")
 				}
 			}(k, v)
 		}
-		p.log.Info().Int("wantRoutes", len(wr)).Int("routes", len(rt.Routes)).Msg("advertised routes")
+		rts := make([]string, 0, len(rt.Routes))
+		for _, r := range rt.Routes {
+			rts = append(rts, r.Prefix)
+		}
+
+		p.log.Info().
+			Int("wantRoutes", len(wr)).
+			Strs("routes", rts).
+			Msg("routeAdvertiser sent")
 		p.wantRoutes <- wr
 	}
 }

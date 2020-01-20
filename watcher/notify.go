@@ -22,7 +22,10 @@ func (w *Watcher) notifier() {
 			go func(v reflector) {
 				err := v.s.Send(ap)
 				if err != nil {
-					w.log.Error().Err(err).Str("id", v.a.WatcherId).Msg("gossip send")
+					w.log.Error().
+						Err(err).
+						Str("id", v.a.WatcherId).
+						Msg("notifier send gossip")
 				}
 			}(v)
 		}
@@ -34,19 +37,26 @@ func (w *Watcher) notifier() {
 			go func(v primary) {
 				err := v.s.Send(ap)
 				if err != nil {
-					w.log.Error().Err(err).Str("id", v.p.PrimaryId).Msg("primaries send")
+					w.log.Error().
+						Err(err).
+						Str("id", v.p.PrimaryId).
+						Msg("notifier send primary")
 				}
 			}(v)
 		}
 		w.primaries <- p
 
-		w.log.Info().Int("reflectors", rc).Int("primaries", pc).Msg("notified")
+		w.log.Info().
+			Int("reflectors", rc).
+			Int("primaries", pc).
+			Int("count", len(ap.Primaries)).
+			Msg("notified")
 	}
 }
 
 func (w *Watcher) allPrimaries() *api.AllPrimaries {
 	ap := &api.AllPrimaries{
-		WatcherId: w.name,
+		WatcherId: w.localAddr,
 	}
 	p := <-w.primaries
 	for _, v := range p {

@@ -1,4 +1,11 @@
 *
+!api
+!cmd
+!Dockerfile
 !go.mod
 !go.sum
-!sidecar/
+!nfdstat
+!primary
+!secondary
+!vendor
+!watcher

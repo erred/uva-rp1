@@ -1,51 +1,52 @@
-PREFIX := seankhliao
-DOCKER_CMD = push \
-		  pull
-COMPOSE_CMD = up \
-		  down
-IMGS = ndn-server \
-	   ndn-router \
-	   ndn-client \
-	   ndn-grafana \
-	   ndn-prometheus
+.PHONY: all
+all: primary secondary watcher grafana traffic
 
-.PHONY: all build
-all: build
 
-build: ndn-server ndn-router ndn-client ndn-grafana ndn-prometheus
 
-.PHONY: $(COMPOSE_CMD)
-$(COMPOSE_CMD):
-	docker-compose $@
+api/primary.pb.go: api/primary.proto
+	go generate --tags=tools ./api/
 
-.PHONY: $(DOCKER_CMD)
-$(DOCKER_CMD):
-	for img in $(IMGS); do docker $@ ${PREFIX}/$${img} ; done
 
-.PHONY: ndn-server
-ndn-server: ndn-base ndn-sidecar
-	docker build -t ${PREFIX}/$@ $@
 
-.PHONY: ndn-router
-ndn-router: ndn-base ndn-sidecar
-	docker build -t ${PREFIX}/$@ $@
+.PHONY: go
+go: api/primary.pb.go
+	docker build -t seankhliao/ndn-mesh .
+.PHONY: nfd
+nfd:
+	docker build -t seankhliao/ndn-base deploy/nfd
+.PHONY: grafana
+grafana:
+	docker build -t seankhliao/ndn-grafana deploy/grafana
 
-.PHONY: ndn-client
-ndn-client: ndn-base
-	docker build -t ${PREFIX}/$@ $@
 
-.PHONY: ndn-sidecar
-ndn-sidecar:
-	docker build -t ${PREFIX}/$@ $@
+.PHONY: traffic
+traffic:
+	docker build -t seankhliao/ndn-traffic deploy/traffic
+.PHONY: primary
+primary: go nfd
+	docker build -t seankhliao/ndn-primary deploy/primary
+.PHONY: secondary
+secondary: go nfd
+	docker build -t seankhliao/ndn-secondary deploy/secondary
+.PHONY: watcher
+watcher: go nfd
+	docker build -t seankhliao/ndn-watcher deploy/watcher
 
-.PHONY: ndn-base
-ndn-base:
-	docker build -t ${PREFIX}/$@ $@
-
-.PHONY: ndn-grafana
-ndn-grafana:
-	docker build -t ${PREFIX}/$@ $@
-
-.PHONY: ndn-prometheus
-ndn-prometheus:
-	docker build -t ${PREFIX}/$@ $@
+.PHONY: push
+push:
+	docker push seankhliao/ndn-base
+	docker push seankhliao/ndn-mesh
+	docker push seankhliao/ndn-grafana
+	docker push seankhliao/ndn-traffic
+	docker push seankhliao/ndn-primary
+	docker push seankhliao/ndn-secondary
+	docker push seankhliao/ndn-watcher
+.PHONY: pull
+pull:
+	docker pull seankhliao/ndn-base
+	docker pull seankhliao/ndn-mesh
+	docker pull seankhliao/ndn-grafana
+	docker pull seankhliao/ndn-traffic
+	docker push seankhliao/ndn-primary
+	docker pull seankhliao/ndn-secondary
+	docker pull seankhliao/ndn-watcher

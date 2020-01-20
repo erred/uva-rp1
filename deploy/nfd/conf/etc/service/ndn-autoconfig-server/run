@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [ -z "$NDN_AUTOCONFIG_FACEURI" ]; then
+    echo "NDN_AUTOCONFIG_FACEURI not set"
+    exit 1
+fi
+
+IFS=,
+list=($NDN_AUTOCONFIG_PREFIXES)
+for p in "${list[@]}"; do
+    prefixes="$prefixes -p $p"
+done
+
+exec ndn-autoconfig-server $prefixes $NDN_AUTOCONFIG_FACEURI

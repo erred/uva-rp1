@@ -1,0 +1,4 @@
+#!/bin/sh
+
+sleep 2
+exec ndn-traffic-server -q /usr/local/etc/ndn/ndn-traffic-server.conf

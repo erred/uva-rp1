@@ -1,4 +1,3 @@
 #!/bin/sh
 
-sleep 2
-exec ndn-autoconfig 2>&1
+exec ndn-autoconfig -d 2>&1

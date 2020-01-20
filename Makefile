@@ -1,5 +1,6 @@
-.PHONY: all
-all: primary secondary watcher grafana traffic
+.PHONY: all build
+all: build
+build: primary secondary watcher grafana traffic
 
 
 

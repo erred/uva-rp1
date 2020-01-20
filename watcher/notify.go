@@ -14,13 +14,12 @@ func (w *Watcher) notify() {
 
 func (w *Watcher) notifier() {
 	for range w.notififcation {
-		ap := w.allPrimaries()
-
+		lp := w.localPrimaries()
 		r := <-w.reflectors
 		rc := len(r)
 		for _, v := range r {
 			go func(v reflector) {
-				err := v.s.Send(ap)
+				err := v.s.Send(lp)
 				if err != nil {
 					w.log.Error().
 						Err(err).
@@ -31,6 +30,7 @@ func (w *Watcher) notifier() {
 		}
 		w.reflectors <- r
 
+		ap := w.allPrimaries()
 		p := <-w.primaries
 		pc := len(p)
 		for _, v := range p {
@@ -49,9 +49,23 @@ func (w *Watcher) notifier() {
 		w.log.Info().
 			Int("reflectors", rc).
 			Int("primaries", pc).
-			Int("count", len(ap.Primaries)).
+			Int("locprimaries", len(lp.Primaries)).
+			Int("allprimaries", len(ap.Primaries)).
 			Msg("notified")
 	}
+}
+
+func (w *Watcher) localPrimaries() *api.AllPrimaries {
+	ap := &api.AllPrimaries{
+		WatcherId: w.localAddr,
+	}
+	p := <-w.primaries
+	for _, v := range p {
+		v := v
+		ap.Primaries = append(ap.Primaries, v.p)
+	}
+	w.primaries <- p
+	return ap
 }
 
 func (w *Watcher) allPrimaries() *api.AllPrimaries {

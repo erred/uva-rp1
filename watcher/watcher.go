@@ -52,12 +52,13 @@ func New(args []string, logger *zerolog.Logger) *Watcher {
 		w.localAddr = ips[0]
 	}
 
-	ws := flagslice(w.watchers)
+	ws := flagslice{w.watchers}
 	fs := flag.NewFlagSet("watcher", flag.ExitOnError)
 	fs.StringVar(&w.promfile, "file", "/etc/prometheus/file_sd.json", "prometheus file sd path")
 	fs.IntVar(&w.port, "port", 8000, "port to serve on")
 	fs.Var(&ws, "watcher", "(repeatable) other watchers to connect to (full mesh)")
 	fs.Parse(args)
+	w.watchers = ws.s
 
 	w.log.Info().
 		Str("file_sd", w.promfile).
@@ -76,7 +77,7 @@ func (w *Watcher) Run() error {
 	go w.notifier()
 
 	for _, wa := range w.watchers {
-		go w.gossiper(wa)
+		go w.gossipRunner(wa)
 	}
 
 	grpcServer := grpc.NewServer()
@@ -112,13 +113,15 @@ type reflector struct {
 	s gossipSender
 }
 
-type flagslice []string
+type flagslice struct {
+	s []string
+}
 
 func (f *flagslice) String() string {
-	return strings.Join(*f, ",")
+	return strings.Join(f.s, ",")
 }
 func (f *flagslice) Set(s string) error {
-	*f = append(*f, s)
+	f.s = append(f.s, s)
 	return nil
 }
 

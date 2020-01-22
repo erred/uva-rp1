@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/seankhliao/uva-rp1/api"
 	"os"
+	"strings"
 )
 
 type Status struct {
@@ -47,6 +48,9 @@ func (s Status) ToStatusNFD(id string, connected []string) *api.StatusNFD {
 	}
 	routes := make([]string, 0, len(s.NFDStatus.Rib.RibEntry))
 	for _, r := range s.NFDStatus.Rib.RibEntry {
+		if strings.HasPrefix(r.Prefix, "/local") {
+			continue
+		}
 		routes = append(routes, r.Prefix)
 	}
 	return &api.StatusNFD{

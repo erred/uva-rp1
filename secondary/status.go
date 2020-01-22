@@ -26,6 +26,7 @@ func (s *Secondary) statusPusher() {
 					Msg("statusPusher recv")
 				return
 			}
+			first = false
 		}
 
 		var stat *nfdstat.Status

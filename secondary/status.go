@@ -26,9 +26,9 @@ func (s *Secondary) statusPusher() {
 					Msg("statusPusher recv")
 				return
 			}
-			first = false
 		}
 
+		first = false
 		var stat *nfdstat.Status
 		var err error
 		for {
@@ -53,7 +53,7 @@ func (s *Secondary) statusPusher() {
 		if err != nil {
 			s.log.Error().Err(err).Msg("statusPusher send")
 		}
-		s.log.Debug().Msg("statusPusher sent")
+		// s.log.Debug().Msg("statusPusher sent")
 	}
 }
 

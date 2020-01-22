@@ -100,7 +100,6 @@ func (p *Primary) distributor() {
 
 		// remove existing from all
 		// remove disconnect from secs
-		avg := len(all)/len(secs) + 1
 		ctr := make(map[string]int, len(secs))
 		for sid, sec := range secs {
 			for pid := range disconnect {
@@ -114,13 +113,6 @@ func (p *Primary) distributor() {
 				}
 			}
 
-			// rebalance
-			for i := 0; i < avg; i++ {
-				for pid, p := range sec.p {
-					all[pid] = p
-					break
-				}
-			}
 			secs[sid] = sec
 			ctr[sid] = len(sec.p)
 		}
@@ -135,6 +127,29 @@ func (p *Primary) distributor() {
 			sec := secs[sid]
 			sec.p[pid] = p
 			secs[sid] = sec
+		}
+
+		for {
+			max, min := mapmaxmin(ctr)
+			if max == "" {
+				break
+			}
+			ctr[max]--
+			ctr[min]++
+			var pid string
+			var p primary
+
+			s := secs[max]
+			for k, v := range s.p {
+				pid, p = k, v
+				delete(s.p, k)
+				break
+			}
+			secs[max] = s
+
+			s = secs[min]
+			s.p[pid] = p
+			secs[min] = s
 		}
 
 		// send
@@ -175,4 +190,23 @@ func mapmin(d map[string]int) string {
 		}
 	}
 	return s
+}
+
+func mapmaxmin(d map[string]int) (max, min string) {
+	sa, a, si, i := "", 0, "", 0
+	for k, v := range d {
+		sa, a, si, i = k, v, k, v
+	}
+	for k, v := range d {
+		if v < i {
+			si, i = k, v
+		}
+		if v > a {
+			sa, a = k, v
+		}
+	}
+	if a-i <= 1 {
+		return "", ""
+	}
+	return sa, si
 }

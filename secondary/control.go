@@ -67,7 +67,9 @@ func (s *Secondary) disconnect(pid string) {
 	delete(pr, pid)
 	s.primaries <- pr
 
-	p.conn.Close()
+	if p.conn != nil {
+		p.conn.Close()
+	}
 
 	ctx := context.Background()
 	err := nfdstat.DelFace(ctx, p.ch)
@@ -153,6 +155,10 @@ func (s *Secondary) connect(p primary) {
 			p.conn.Close()
 			continue
 		}
+
+		pr = <-s.primaries
+		pr[p.p.PrimaryId] = p
+		s.primaries <- pr
 
 		s.routeUpdater(p.p.PrimaryId, p.ch, rtc)
 	}

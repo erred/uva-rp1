@@ -37,8 +37,7 @@ watcher: go nfd
 .PHONY: push
 push:
 	docker push seankhliao/ndn-nfd
-	docker push seankhliao/ndn-mesh
-	docker push seankhliao/ndn-grafana
+	# docker push seankhliao/ndn-grafana
 	docker push seankhliao/ndn-traffic
 	docker push seankhliao/ndn-primary
 	docker push seankhliao/ndn-secondary
@@ -46,8 +45,7 @@ push:
 .PHONY: pull
 pull:
 	docker pull seankhliao/ndn-nfd
-	docker pull seankhliao/ndn-mesh
-	docker pull seankhliao/ndn-grafana
+	# docker pull seankhliao/ndn-grafana
 	docker pull seankhliao/ndn-traffic
 	docker pull seankhliao/ndn-primary
 	docker pull seankhliao/ndn-secondary

@@ -159,6 +159,7 @@ func (d *Dash) update() []*api.StatusPrimary {
 			s, err := prim.cli.Recv()
 			if err != nil {
 				d.log.Error().Err(err).Str("id", pid).Msg("update recv")
+				// d.log.Fatal().Err(err).Str("id", pid).Msg("update recv")
 				return
 			}
 			stats <- s

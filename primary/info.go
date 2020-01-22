@@ -159,6 +159,9 @@ func (p *Primary) PrimaryStatus(s api.Info_PrimaryStatusServer) error {
 		for sec := range sstat {
 			pstat.Secondaries = append(pstat.Secondaries, sec)
 		}
+		if len(pstat.Secondaries) == 0 {
+			pstat.Secondaries = []*api.StatusNFD{}
+		}
 
 		err = s.Send(pstat)
 		if err != nil {

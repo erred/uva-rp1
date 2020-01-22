@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -39,8 +40,11 @@ func New(args []string, logger *zerolog.Logger) *Dash {
 	}
 
 	d := &Dash{
-		log: logger,
+		log:       logger,
+		primaries: make(chan map[string]primary, 1),
 	}
+
+	d.primaries <- make(map[string]primary)
 
 	fs := flag.NewFlagSet("dash", flag.ExitOnError)
 	fs.DurationVar(&d.interval, "interval", 2*time.Second, "refresh interval")
@@ -57,6 +61,7 @@ func (d *Dash) Run() error {
 		return fmt.Errorf("run dial %s: %w", d.watcher, err)
 	}
 	defer conn.Close()
+	d.log.Info().Msg("connected to reflector")
 	rcli := api.NewReflectorClient(conn)
 	cli, err := rcli.Primaries(context.Background(), &api.Primary{
 		PrimaryId: "dash-" + strconv.Itoa(rand.Int()),
@@ -66,6 +71,7 @@ func (d *Dash) Run() error {
 	}
 	go d.primariesUpdater(cli)
 
+	d.log.Info().Msg("starting uilive")
 	ui := uilive.New()
 	ui.RefreshInterval = 10 * time.Millisecond
 	ui.Start()
@@ -82,9 +88,12 @@ func (d *Dash) Run() error {
 func draw(ui *uilive.Writer, up []*api.StatusPrimary) {
 	tab := uitable.New()
 	tab.MaxColWidth = 80
+	tab.RightAlign(1)
+	tab.RightAlign(2)
+	tab.RightAlign(3)
 	tab.AddRow("")
-	// tab.AddRow("NODE", "CACHE", "MEMORY (B)", "IN/OUT (B)", "ROUTES")
-	tab.AddRow("NODE", "CACHE", "MEMORY (B)", "IN/OUT (B)")
+	tab.AddRow("NODE", "CACHE", "MEMORY (B)", "IN/OUT (B)", "CONNECTED", "ROUTES")
+	// tab.AddRow("NODE", "CACHE", "MEMORY (B)", "IN/OUT (B)")
 	sort.Slice(up, func(i, j int) bool {
 		return up[i].Id < up[j].Id
 	})
@@ -92,32 +101,38 @@ func draw(ui *uilive.Writer, up []*api.StatusPrimary) {
 		sort.Slice(up[p].Secondaries, func(i, j int) bool {
 			return up[p].Secondaries[i].Id < up[p].Secondaries[j].Id
 		})
-		// sort.Slice(up[p].Local.Routes, func(i, j int) bool {
-		// 	return up[p].Local.Routes[i] < up[p].Local.Routes[j]
-		// })
+		sort.Slice(up[p].Local.Connected, func(i, j int) bool {
+			return up[p].Local.Connected[i] < up[p].Local.Connected[j]
+		})
+		sort.Slice(up[p].Local.Routes, func(i, j int) bool {
+			return up[p].Local.Routes[i] < up[p].Local.Routes[j]
+		})
 		tab.AddRow(
 			up[p].Id,
-			fmt.Sprintf("%d / %d", up[p].Local.CsEntries, up[p].Local.GetCsCapacity),
+			fmt.Sprintf("%d / %d", up[p].Local.CsEntries, up[p].Local.CsCapacity),
 			strconv.FormatInt(up[p].Local.Memory, 10),
 			fmt.Sprintf("%d / %d", up[p].Local.BytesIn, up[p].Local.BytesOut),
-			// strings.Join(up[p].Local.Routes, ", "),
+			strings.Join(up[p].Local.Connected, ", "),
+			strings.Join(up[p].Local.Routes, ", "),
 		)
 		for s := range up[p].Secondaries {
-			// sort.Slice(up[p].Secondaries[s].Connected, func(i, j int) bool {
-			// 	return up[p].Secondaries[s].Connected[i] < up[p].Secondaries[s].Connected[j]
-			// })
-			// sort.Slice(up[p].Secondaries[s].Routes, func(i, j int) bool {
-			// 	return up[p].Secondaries[s].Routes[i] < up[p].Secondaries[s].Routes[j]
-			// })
+			sort.Slice(up[p].Secondaries[s].Connected, func(i, j int) bool {
+				return up[p].Secondaries[s].Connected[i] < up[p].Secondaries[s].Connected[j]
+			})
+			sort.Slice(up[p].Secondaries[s].Routes, func(i, j int) bool {
+				return up[p].Secondaries[s].Routes[i] < up[p].Secondaries[s].Routes[j]
+			})
 			prefix := " ├ "
 			if s == len(up[p].Secondaries)-1 {
 				prefix = " └ "
 			}
 			tab.AddRow(
 				prefix+up[p].Secondaries[s].Id,
-				fmt.Sprintf("%d / %d", up[p].Secondaries[s].CsEntries, up[p].Secondaries[s].GetCsCapacity),
+				fmt.Sprintf("%d / %d", up[p].Secondaries[s].CsEntries, up[p].Secondaries[s].CsCapacity),
 				strconv.FormatInt(up[p].Secondaries[s].Memory, 10),
 				fmt.Sprintf("%d / %d", up[p].Secondaries[s].BytesIn, up[p].Secondaries[s].BytesOut),
+				strings.Join(up[p].Secondaries[s].Connected, ", "),
+				strings.Join(up[p].Secondaries[s].Routes, ", "),
 			)
 		}
 	}

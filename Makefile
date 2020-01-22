@@ -8,7 +8,7 @@ api/primary.pb.go: api/primary.proto
 	go generate --tags=tools ./api/
 
 
-dashc:
+dashc: dash/dash.go
 	CGO_ENABLED=0 go build -trimpath ./cmd/dashc
 .PHONY: go
 go: api/primary.pb.go

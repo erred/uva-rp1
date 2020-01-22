@@ -164,6 +164,6 @@ func (p *Primary) PrimaryStatus(s api.Info_PrimaryStatusServer) error {
 		if err != nil {
 			return fmt.Errorf("PrimaryStatus send: %w", err)
 		}
-		p.log.Info().Msg("PrimaryStatus sent")
+		// p.log.Info().Msg("PrimaryStatus sent")
 	}
 }

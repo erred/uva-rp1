@@ -28,6 +28,10 @@ func (s *Secondary) disconnect(pid string) {
 	delete(pr, pid)
 	s.primaries <- pr
 
+	s.log.Debug().
+		Str("id", pid).
+		Str("face", p.ch).
+		Msg("localSec disconnecting")
 	ctx := context.Background()
 	err := nfdstat.DelFace(ctx, p.ch)
 	if err != nil {

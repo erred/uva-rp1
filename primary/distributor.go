@@ -47,14 +47,13 @@ func (p *Primary) distributor() {
 		}
 		p.primaries <- prs
 
-		p.log.Info().
+		log := p.log.Info().
 			Int("all", len(pr)).
-			Int("disconnect", len(disconnect)).
-			Msg("distributor found delta")
+			Int("disconnect", len(disconnect))
 
 		secs := <-p.secondaries
 		if nsec == 0 && len(secs) == 0 {
-			p.log.Info().Msg("distributor apply local -> local")
+			log.Msg("distributor apply local -> local")
 
 			lprs := <-localSec.primaries
 			for k, v := range all {
@@ -72,7 +71,7 @@ func (p *Primary) distributor() {
 			continue
 		} else if nsec > 0 && len(secs) == 0 {
 			// apply single strategy
-			p.log.Info().Msg("distributor apply secondaries -> local")
+			log.Msg("distributor apply secondaries -> local")
 
 			err := nfdstat.RouteStrategy(context.Background(), "/", p.singleStrategy)
 			if err != nil {
@@ -85,10 +84,8 @@ func (p *Primary) distributor() {
 			nsec = len(secs)
 			p.secondaries <- secs
 			continue
-		}
-
-		if nsec == 0 {
-			p.log.Info().Msg("distributor apply local -> secondaries")
+		} else if nsec == 0 {
+			log.Msg("distributor apply local -> secondaries")
 
 			err := nfdstat.RouteStrategy(context.Background(), "/", p.multiStrategy)
 			if err != nil {
@@ -97,13 +94,13 @@ func (p *Primary) distributor() {
 			for k := range all {
 				go localSec.disconnect(k)
 			}
-
 		} else {
-			p.log.Info().Msg("distributor apply secondaries -> secondaries")
+			log.Msg("distributor apply secondaries -> secondaries")
 		}
 
 		// remove existing from all
 		// remove disconnect from secs
+		avg := len(all)/len(secs) + 1
 		ctr := make(map[string]int, len(secs))
 		for sid, sec := range secs {
 			for pid := range disconnect {
@@ -114,6 +111,14 @@ func (p *Primary) distributor() {
 			for pid := range sec.p {
 				if _, ok := all[pid]; ok {
 					delete(all, pid)
+				}
+			}
+
+			// rebalance
+			for i := 0; i < avg; i++ {
+				for pid, p := range sec.p {
+					all[pid] = p
+					break
 				}
 			}
 			secs[sid] = sec
@@ -135,7 +140,6 @@ func (p *Primary) distributor() {
 		// send
 		dbg := p.log.Debug()
 		for id, sec := range secs {
-			// go func(id string, sec secondary) {
 			prims := make([]*api.Primary, 0, len(sec.p))
 			primsd := make([]string, 0, len(sec.p))
 			for _, pri := range sec.p {

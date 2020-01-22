@@ -39,14 +39,18 @@ func (s *Stat) Status() (*Status, error) {
 	return &Status{*n, mem}, nil
 
 }
-func (s Status) ToStatusResponse() *api.StatusResponse {
+func (s Status) ToStatusNFD(id string, connected []string) *api.StatusNFD {
 	var bin, bout int64
 	for _, f := range s.NFDStatus.Faces.Face {
 		bin += f.ByteCounters.IncomingBytes
 		bout += f.ByteCounters.OutgoingBytes
 	}
-	return &api.StatusResponse{
-		Memory: s.Memory,
+	routes := make([]string, 0, len(s.NFDStatus.Rib.RibEntry))
+	for _, r := range s.NFDStatus.Rib.RibEntry {
+		routes = append(routes, r.Prefix)
+	}
+	return &api.StatusNFD{
+		Id: id,
 
 		CsCapacity: s.NFDStatus.Cs.Capacity,
 		CsEntries:  s.NFDStatus.Cs.NEntries,
@@ -68,5 +72,9 @@ func (s Status) ToStatusResponse() *api.StatusResponse {
 		PktOutNack:     s.NFDStatus.GeneralStatus.PacketCounters.OutgoingPackets.NNacks,
 		BytesIn:        bin,
 		BytesOut:       bout,
+
+		Memory:    s.Memory,
+		Routes:    routes,
+		Connected: connected,
 	}
 }

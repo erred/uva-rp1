@@ -2,28 +2,12 @@ package secondary
 
 import (
 	"context"
-	"strings"
-
-	"github.com/seankhliao/uva-rp1/api"
 	"github.com/seankhliao/uva-rp1/nfdstat"
+	"strings"
 )
 
 func (s *Secondary) statusPusher() {
-	var stat *nfdstat.Status
-	var err error
-	for {
-		stat, err = s.stat.Status()
-		if err != nil {
-			s.log.Error().
-				Err(err).
-				Msg("statusPusher get init")
-			continue
-		}
-		break
-	}
-	s.log.Info().Msg("statusPusher got init")
-
-	c, err := s.ctl.PushStatus(context.Background())
+	c, err := s.ctl.SecondaryStatus(context.Background())
 	if err != nil {
 		s.log.Error().
 			Err(err).
@@ -32,23 +16,20 @@ func (s *Secondary) statusPusher() {
 	}
 	s.log.Info().Msg("statusPusher connected")
 
-	err = c.Send(&api.StatusResponse{Id: s.localAddr})
-	if err != nil {
-		s.log.Error().
-			Err(err).
-			Msg("statusPusher send init")
-	}
-
-	s.log.Info().Msg("statusPusher waiting for recv")
+	first := true
 	for {
-		_, err := c.Recv()
-		if err != nil {
-			s.log.Error().
-				Err(err).
-				Msg("statusPusher recv")
-			return
+		if !first {
+			_, err := c.Recv()
+			if err != nil {
+				s.log.Error().
+					Err(err).
+					Msg("statusPusher recv")
+				return
+			}
 		}
 
+		var stat *nfdstat.Status
+		var err error
 		for {
 			stat, err = s.stat.Status()
 			if err != nil {
@@ -59,7 +40,15 @@ func (s *Secondary) statusPusher() {
 			}
 			break
 		}
-		err = c.Send(stat.ToStatusResponse())
+
+		p := <-s.primaries
+		prims := make([]string, 0, len(p))
+		for pid := range p {
+			prims = append(prims, pid)
+		}
+		s.primaries <- p
+
+		err = c.Send(stat.ToStatusNFD(s.localAddr, prims))
 		if err != nil {
 			s.log.Error().Err(err).Msg("statusPusher send")
 		}

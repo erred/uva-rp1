@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/seankhliao/uva-rp1/api"
+	"sync"
 )
 
 func (p *Primary) Identity(ctx context.Context, r *api.IdentityRequest) (*api.IdentityResponse, error) {
@@ -75,10 +76,10 @@ func (p *Primary) getRoutes() *api.RouteResponse {
 	return rr
 }
 
-func (p *Primary) PushStatus(s api.Info_PushStatusServer) error {
+func (p *Primary) SecondaryStatus(s api.Info_SecondaryStatusServer) error {
 	sr, err := s.Recv()
 	if err != nil {
-		return fmt.Errorf("PushStatus recv init: %w", err)
+		return fmt.Errorf("SecondaryStatus recv init: %w", err)
 	}
 
 	sec := <-p.secondaries
@@ -93,31 +94,76 @@ func (p *Primary) PushStatus(s api.Info_PushStatusServer) error {
 		p.secondaries <- sec
 		p.log.Info().
 			Str("id", id).
-			Msg("PushStatus unregistered")
+			Msg("SecondaryStatus unregistered")
 	}(sr.Id)
 
 	p.log.Info().
 		Str("id", sr.Id).
-		Msg("PushStatus registered")
+		Msg("SecondaryStatus registered")
 	<-s.Context().Done()
 	return nil
 }
 
-func (p *Primary) PullStatus(s api.Info_PullStatusServer) error {
+func (p *Primary) PrimaryStatus(s api.Info_PrimaryStatusServer) error {
 	for {
 		_, err := s.Recv()
 		if err != nil {
-			return fmt.Errorf("PullStatus recv: %w", err)
-		}
-		stat, err := p.stat.Status()
-		if err != nil {
-			return fmt.Errorf("PullStatus status: %w", err)
+			return fmt.Errorf("PrimaryStatus recv: %w", err)
 		}
 
-		err = s.Send(stat.ToStatusResponse())
-		if err != nil {
-			return fmt.Errorf("PullStatus send: %w", err)
+		var wg sync.WaitGroup
+		lstat, sstat := make(chan *api.StatusNFD), make(chan *api.StatusNFD)
+
+		go func() {
+			stat, err := p.stat.Status()
+			if err != nil {
+				p.log.Error().Err(err).Msg("PrimaryStatus local")
+				close(lstat)
+				return
+			}
+
+			lstat <- stat.ToStatusNFD(p.localAddr, nil)
+			close(lstat)
+		}()
+
+		psec := <-p.secondaries
+		secs := make([]string, 0, len(psec))
+		for sid, sec := range psec {
+			secs = append(secs, sid)
+			wg.Add(1)
+			go func(id string, ss api.Info_SecondaryStatusServer) {
+				defer wg.Done()
+				err := ss.Send(&api.StatusRequest{})
+				if err != nil {
+					p.log.Error().Err(err).Str("id", id).Msg("PrimaryStatus secondary send")
+					return
+				}
+				stat, err := ss.Recv()
+				if err != nil {
+					p.log.Error().Err(err).Str("id", id).Msg("PrimaryStatus secondary recv")
+				}
+				sstat <- stat
+			}(sid, sec.s)
 		}
-		p.log.Info().Msg("PullStatus sent")
+		p.secondaries <- psec
+
+		go func() {
+			wg.Wait()
+			close(sstat)
+		}()
+
+		pstat := &api.StatusPrimary{
+			Id:    p.localAddr,
+			Local: <-lstat,
+		}
+		for sec := range sstat {
+			pstat.Secondaries = append(pstat.Secondaries, sec)
+		}
+
+		err = s.Send(pstat)
+		if err != nil {
+			return fmt.Errorf("PrimaryStatus send: %w", err)
+		}
+		p.log.Info().Msg("PrimaryStatus sent")
 	}
 }

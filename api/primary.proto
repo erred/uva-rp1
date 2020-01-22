@@ -28,13 +28,13 @@ service Info {
 
   // request sent by Secondary
   rpc Channels(ChannelRequest) returns (ChannelResponse){}
-  // request sent by Secondary (and Primary?)
+  // request sent by Secondary
   rpc Routes(RouteRequest) returns (stream RouteResponse) {}
   // request sent by Secondary
-  rpc PushStatus(stream StatusResponse) returns (stream StatusRequest){}
+  rpc SecondaryStatus(stream StatusNFD) returns (stream StatusRequest){}
 
-  // request sent by Watcher
-  rpc PullStatus(stream StatusRequest) returns (stream StatusResponse) {}
+  // request sent by Dash
+  rpc PrimaryStatus(stream StatusRequest) returns (stream StatusPrimary) {}
 
   // control Secondary
   rpc Register(RegisterRequest) returns (stream RegisterControl) {}
@@ -63,8 +63,13 @@ message RouteResponse {
 }
 
 message StatusRequest {}
-message StatusResponse {
-  int64 memory = 1;
+message StatusPrimary {
+  string id = 1;
+  StatusNFD local = 2;
+  repeated StatusNFD secondaries = 3;
+}
+message StatusNFD {
+  string id = 1;
 
   int64 cs_capacity = 2;
   int64 cs_entries = 3;
@@ -88,8 +93,15 @@ message StatusResponse {
   int64 bytes_in = 19;
   int64 bytes_out = 20;
 
-  string id = 21;
+  int64 memory = 21;
+  repeated string routes = 22;
+  repeated string connected = 23;
 }
+message EndpointRoutes {
+  string id = 1;
+  repeated string prefix = 2;
+}
+
 
 message RegisterRequest {
   string secondary_id = 1;

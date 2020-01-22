@@ -22,7 +22,7 @@ type primary struct {
 type secondary struct {
 	p   map[string]primary
 	c   api.Info_RegisterServer
-	s   api.Info_PushStatusServer
+	s   api.Info_SecondaryStatusServer
 	chs []string
 }
 

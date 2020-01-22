@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"github.com/seankhliao/uva-rp1/api"
+	"strings"
 )
 
 func (w *Watcher) notify() {
@@ -60,7 +61,10 @@ func (w *Watcher) localPrimaries() *api.AllPrimaries {
 		WatcherId: w.localAddr,
 	}
 	p := <-w.primaries
-	for _, v := range p {
+	for pid, v := range p {
+		if strings.HasPrefix(pid, "dash") {
+			continue
+		}
 		v := v
 		ap.Primaries = append(ap.Primaries, v.p)
 	}
@@ -73,7 +77,10 @@ func (w *Watcher) allPrimaries() *api.AllPrimaries {
 		WatcherId: w.localAddr,
 	}
 	p := <-w.primaries
-	for _, v := range p {
+	for pid, v := range p {
+		if strings.HasPrefix(pid, "dash") {
+			continue
+		}
 		v := v
 		ap.Primaries = append(ap.Primaries, v.p)
 	}

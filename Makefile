@@ -1,6 +1,6 @@
 .PHONY: all build
 all: build
-build: primary secondary watcher grafana traffic
+build: primary secondary watcher grafana traffic dashc
 
 
 
@@ -8,7 +8,8 @@ api/primary.pb.go: api/primary.proto
 	go generate --tags=tools ./api/
 
 
-
+dashc:
+	CGO_ENABLED=0 go build -trimpath ./cmd/dashc
 .PHONY: go
 go: api/primary.pb.go
 	docker build -t seankhliao/ndn-mesh .

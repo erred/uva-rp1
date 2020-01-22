@@ -49,6 +49,6 @@ pull:
 	docker pull seankhliao/ndn-mesh
 	docker pull seankhliao/ndn-grafana
 	docker pull seankhliao/ndn-traffic
-	docker push seankhliao/ndn-primary
+	docker pull seankhliao/ndn-primary
 	docker pull seankhliao/ndn-secondary
 	docker pull seankhliao/ndn-watcher

@@ -27,8 +27,8 @@ Name based routing with _inline_ caching.
 
 ### Core Libraries
 
-- CCNx superseded by CICN in process of being integrated with NDN-CXX.
-- Current development is in `named-data/ndn-cxx` (C++14 with Experimental Extentions).
+- Current development is in `named-data/ndn-cxx` (C++14 with Experimental Extentions),
+  Latest release v0.7.0 Jan 13, 2020.
 
 ### Ecosystem
 
@@ -43,11 +43,13 @@ NFD places a _practical limit_ (hard limit in code) of 8800 bytes.
 
 Caching is limited to in memory cache,
 internal implementation tied to shared data structure with FIB / PIB.
+
 Max memory usage is 550MiB in default config
 (8800 bytes x 65536 cache size).
+
 Caching observability is limited to cache size, entries, and hits.
 No good way to look at cache contents or individual items
-(except implementing your own caching strategy?).
+(except implementing your own caching strategy or tailing NFD debug logs).
 
 #### NLSR
 
@@ -62,7 +64,7 @@ constantly broken from protocol update.
 
 Lacks features available in C++ libraries
 needed to implement basic applications.
-Most assume a local NFD node with a unix / tcp connection
+Most assume a local NFD node with a unix / tcp connection (ndn-cxx limitation)
 
 #### Client tooling
 
@@ -72,7 +74,8 @@ Tooling from `named-data` is written in C++ and works,
 but focus heavily on traffic generation.
 
 Third party mainly written in Python but either lack basic functionality
-or are broken by protocol updates.
+(ex large data segmentation)
+and may optionally be broken by protocol updates.
 
 There are a lot of papers on NDN for vehicular mobility.
 
@@ -80,3 +83,5 @@ There are a lot of papers on NDN for vehicular mobility.
 
 - `go-ndn/nfd`: pure go reimplementation with a focus on operability.
   Last updated 3 years ago, protocol no longer compatible.
+- `fdio/hicn`: hybrid ICN implementation (incompatible?) based on IPv6
+- - CCNx superseded by CICN in process of being integrated with NDN-CXX ?

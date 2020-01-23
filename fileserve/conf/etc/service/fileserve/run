@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd /opt/fileserve
+exec python3 ./app.py 2>&1

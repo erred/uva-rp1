@@ -10,7 +10,7 @@ down:
 	docker-compose down
 
 .PHONY: producer producer1a producer1b producer2a producer3a producer4a
-producer: producer1a producer2a producer3a producer4a
+producer: producer1a producer1b producer2a producer3a producer4a
 producer1a:
 	docker-compose exec primary1 nfdc face create udp://172.26.1.21
 	docker-compose exec primary1 nfdc route add /producer/1/a udp://172.26.1.21

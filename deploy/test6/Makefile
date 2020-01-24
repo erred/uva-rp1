@@ -1,45 +1,42 @@
+.PHONY: connect
+connect: producer consumer
 
-network:
-	docker network create --subnet 145.100.111.0/28 test6
+.PHONY: up
+up:
+	docker-compose down || true
+	docker-compose up
+.PHONY: down
+down:
+	docker-compose down
 
-watcher:
-	docker run --rm -d --network test6 --ip 145.100.111.2 -p 8000:8000 \
-		seankhliao/ndn-watcher
-
-primary1:
-	docker run --rm -d --network test6 --ip 145.100.111.3 -p 6363:6363 -p 8000:8000 \
-		--env WATCHER=145.100.111.2:8000 --name=primary1 seankhliao/ndn-primary
-primary2:
-	docker run --rm -d --network test6 --ip 145.100.111.4 -p 6363:6363 -p 8000:8000 \
-		--env WATCHER=145.100.111.2:8000 --name=primary2 seankhliao/ndn-primary
-primary3:
-	docker run --rm -d --network test6 --ip 145.100.111.5 -p 6363:6363 -p 8000:8000 \
-		--env WATCHER=145.100.111.2:8000 --name=primary3 seankhliao/ndn-primary
-
-
-producer1:
-	docker run --rm -d --network test6 --ip 145.100.111.6 -p 6363:6363 -p 8000:8000 \
-		--env NDN_TRAFFIC_SERVER_DISABLED= -v $$(pwd)/producer1:/usr/local/etc/ndn \
-		seankhliao/ndn-traffic
-	docker exec primary1 nfdc face create udp://145.100.111.6
-	docker exec primary1 nfdc route add /producer/1/a udp://145.100.111.6
-
-producer2:
-	docker run --rm -d --network test6 --ip 145.100.111.7 -p 6363:6363 -p 8000:8000 \
-		seankhliao/ndn-fileserve
-	docker exec primary2 nfdc face create udp://145.100.111.7
-	docker exec primary2 nfdc route add /fileserve udp://145.100.111.7
-
-secondary3a:
-	docker run --rm -d --network test6 --ip 145.100.111.8 \
-		--env PRIMARY=145.100.111.5:8000 seankhliao/ndn-secondary
-
-secondary3b:
-	docker run --rm -d --network test6 --ip 145.100.111.9 \
-		--env PRIMARY=145.100.111.5:8000 seankhliao/ndn-secondary
-
-client3a:
-	docker run --rm -d --network test6 --ip 145.100.111.10 \
-		--env NDN_TRAFFIC_CLIENT_DISABLED= --env FILESERVE_DISABLED=1 \
-		-v $$(pwd)/consumer3a:/usr/local/etc/ndn \
-		seankhliao/ndn-fileserve
+.PHONY: producer producer1a producer1b producer2a producer3a producer4a
+producer: producer1a producer2a producer3a producer4a
+producer1a:
+	docker-compose exec primary1 nfdc face create udp://172.26.1.21
+	docker-compose exec primary1 nfdc route add /producer/1/a udp://172.26.1.21
+producer1b:
+	docker-compose exec primary1 nfdc face create udp://172.26.1.22
+	docker-compose exec primary1 nfdc route add /fileserve udp://172.26.1.22
+producer2a:
+	docker-compose exec primary2 nfdc face create udp://172.26.2.21
+	docker-compose exec primary2 nfdc route add /producer/2/a udp://172.26.2.21
+producer3a:
+	docker-compose exec primary3 nfdc face create udp://172.26.3.21
+	docker-compose exec primary3 nfdc route add /producer/3/a udp://172.26.3.21
+producer4a:
+	docker-compose exec primary4 nfdc face create udp://172.26.4.21
+	docker-compose exec primary4 nfdc route add /producer/4/a udp://172.26.4.21
+.PHONY: consumer consumer1a consumer2a consumer3a consumer4a
+consumer: consumer1a consumer2a consumer3a consumer4a
+consumer1a:
+	docker-compose exec consumer1a nfdc face create udp://172.26.1.1
+	docker-compose exec consumer1a nfdc route add / udp://172.26.1.1
+consumer2a:
+	docker-compose exec consumer2a nfdc face create udp://172.26.2.1
+	docker-compose exec consumer2a nfdc route add / udp://172.26.2.1
+consumer3a:
+	docker-compose exec consumer3a nfdc face create udp://172.26.3.1
+	docker-compose exec consumer3a nfdc route add / udp://172.26.3.1
+consumer4a:
+	docker-compose exec consumer4a nfdc face create udp://172.26.4.1
+	docker-compose exec consumer4a nfdc route add / udp://172.26.4.1

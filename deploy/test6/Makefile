@@ -40,5 +40,6 @@ secondary3b:
 
 client3a:
 	docker run --rm -d --network test6 --ip 145.100.111.10 \
-		-env NDN_TRAFFIC_CLIENT_DISABLED= -v $$(pwd)/consumer3a:/usr/local/etc/ndn \
-		seankhliao/ndn-traffic
+		-env NDN_TRAFFIC_CLIENT_DISABLED= -env FILESERVE_DISABLED=1 \
+		-v $$(pwd)/consumer3a:/usr/local/etc/ndn \
+		seankhliao/ndn-fileserve

@@ -1,6 +1,6 @@
 .PHONY: all build
 all: build
-build: primary secondary watcher grafana traffic dashc
+build: primary secondary watcher grafana traffic dashc fileserve
 
 
 

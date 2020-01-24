@@ -9,7 +9,7 @@ from ndn.types import InterestNack
 
 app = NDNApp()
 
-SERVE_PREFIX = '/demo/fileserve'
+SERVE_PREFIX = '/fileserve'
 DATA_VERSION = 1
 BASE_DIR = 'public/'
 SEGMENT_SIZE = 4400

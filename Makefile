@@ -33,6 +33,9 @@ secondary: go nfd
 .PHONY: watcher
 watcher: go nfd
 	docker build -t seankhliao/ndn-watcher deploy/watcher
+.PHONY: fileserve
+fileserve: traffic
+	docker build -t seankhliao/ndn-fileserve fileserve
 
 .PHONY: push
 push:
@@ -42,6 +45,7 @@ push:
 	docker push seankhliao/ndn-primary
 	docker push seankhliao/ndn-secondary
 	docker push seankhliao/ndn-watcher
+	docker push seankhliao/ndn-fileserve
 .PHONY: pull
 pull:
 	docker pull seankhliao/ndn-nfd
@@ -50,3 +54,4 @@ pull:
 	docker pull seankhliao/ndn-primary
 	docker pull seankhliao/ndn-secondary
 	docker pull seankhliao/ndn-watcher
+	docker pull seankhliao/ndn-fileserve

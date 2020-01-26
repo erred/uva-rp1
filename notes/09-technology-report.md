@@ -1,6 +1,8 @@
-# Technical Report
+# Technology Report
 
 January 2020
+
+Canonical version: [github](https://github.com/seankhliao/uva-rp1/blob/master/notes/09-technology-report.md)
 
 ## Context
 
@@ -21,7 +23,7 @@ leads me to think data should instead be referenced by its content
 (hash) and a human-friendly translation layer be provided to map
 names to hashes. This has the advantage that for the protocol and
 applications, the same name will always reference the same data,
-vastly simplifying the protocol. This also provides an algorthmic
+vastly simplifying the protocol. This also provides an algorithmic
 guarantee against link rot.
 
 IPFS appears to be the most production ready,
@@ -48,6 +50,7 @@ InterPlanetary FileSystem
 - Peer / network discovery:
   - gossip through bootstrap peer list
 - Reference implementation: Go
+- Production readiness: in use serving ~640TiB
 - Future development:
   - Blockchain / Trillian based IPNS for historical lookup
 
@@ -66,6 +69,7 @@ InterPlanetary FileSystem
 - Peer / network discovery:
   - Current: Local broadcast / global DNS
 - Reference implementation: javascript
+- Production readiness: experimental
 - Future development:
   - multiple writer
   - hyperswarm: replace discovery mechanism
@@ -82,6 +86,7 @@ InterPlanetary FileSystem
   - Bittorrent
   - RSS feed for selective mirroring
 - Reference implementation: mixed
+- Production readiness: in use serving ~39TiB
 - Future development: ?
 
 ### ICN / NDN
@@ -101,6 +106,7 @@ Named Data Networking
 - Peer / network discovery:
   - broadcast / dns local gateway discovery
 - Reference implementation: C++17
+- Production readiness: highly experimental
 - Future development: ?
 
 #### hICN
@@ -118,6 +124,7 @@ Fast Data Project Hybrid Information Centric Networking
 - Peer / network discovery:
   - IPv6
 - Reference implementation: C++11
+- Production readiness: experimental
 - Future development: ?
 
 ### Related Projects
@@ -130,3 +137,10 @@ InterPlanetary Linked Data
 
 - Idea: Semantic Web / Linked Data for hash based, content addressable data networks
   - ex: IPFS, Git, Blockchain
+
+#### CCN
+
+- CCNx superseded by CCNx_Distillery
+- CCNx_Distillery superseded by CICN
+- CICN appears inactive
+- 2016/2017 attempt to merge CICN / NDN (failed)

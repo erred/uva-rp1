@@ -9,6 +9,7 @@ Canonical: [github](https://github.com/seankhliao/uva-rp1/blob/master/notes/11-r
 TODO: come up with appropriate title
 
 - Evaluation of Named Data Networks as Content Distribution Networks in Cloud Environments
+- Named Data Networks as a distributed Content Distribution Network
 
 ### Abstract
 
@@ -85,6 +86,8 @@ NDN and its implementation.
 
 #### Theoretical properties
 
+conceptual
+
 NDN works by giving every piece of content its own name.
 
 intro, data + req/res
@@ -101,6 +104,11 @@ data: mutability, cache invalidation
 
 #### Technical properties
 
+NDN Forwarding Daemon (NFD) is the reference implementation of NDN's router.
+It is a single-threaded, event-driven C++14 application,
+with connectivity over unix domain sockets, Ethernet, UDP, TCP, and WebSockets.
+Currently, it only has an in-memory cache.
+
 overlay
 
 cache, scaling up
@@ -111,13 +119,20 @@ route propagation, network autoconfig, scaling out
 
 #### Automation and Proof of Concept
 
+Given the premise that it should be able to run in (public) clouds,
+running a NDN network as an overlay over IP networks appear to be an appropriate choice.
+
+Scaling up.
+
+Scaling out.
+
 implementation
 
 experiments
 
 #### Other Technologies
 
-[go-ndn][@gondn] [^gondn] was a 2013 clean implementation of NFD in Go
+go-ndn was a 2013 clean implementation of NFD in Go
 by a student at UCLA.
 This implementation was more minimalist
 and performance oriented in design,
@@ -126,7 +141,7 @@ It could also utilize a persistent, on-disk cache.
 Currently not compatible with the reference implementation
 dues to changes in the protocol.
 
-The CICN [^cicn] project shares roots with the NDN project,
+The CICN project shares roots with the NDN project,
 but is based on a later protocol design with different priorities.
 It focuses on being a layer 3 protocol,
 leaving features such as content discovery
@@ -136,15 +151,82 @@ as opposed to the optional prefix match for NDN.
 Additionally, in contrast with the permanant validity of NDN data packets,
 CICN data packets have a lifetime after which they expire.
 
+hicn...
+
 Bittorrent is a popular protocol distributing large datasets,
 due to both its resiliency to network failures
 and ability to distribute load between peers.
-[Academic Torrents][@academictorrents] [^academictorrents] is a project in the research space
+Academic Torrents is a project in the research space
 that provides a central point for discovery and collaboration.
 
-InterPlanetary FileSystem (IPFS) [^ipfs] is a content addressed protocol.
+InterPlanetary FileSystem (IPFS) is a content addressed protocol and network.
+Instead of giving data heirarchical names,
+ir derives a deterministic name using a cryptographic hash.
+Content is located through a Distributed Hash Table (DHT) instead of routing.
+This slows down the lookup of content,
+but allows for network-wide deduplication of data accross uncorrelated datasets.
 
 ### Discusssion
+
+Starting with names,
+data is only associated with a name by the fact that at some point,
+the data was accessible at the name.
+Even though the documentation strongly implies
+that data under a name should not change,
+there is no guarantee that the data will not change at some future point in time,
+leading to inconsistent views of data,
+especially when paired with NDN's decision not to limit data lifetime.
+CICN resolves this by adding validity period to data,
+Bittorrent doesn't have this problem as it is a snapshot of data,
+and IPFS also doesn't have this problem as their names directly address data.
+
+Another point of naming is that under NDN, CICN, and Bittorrent,
+if the same piece of data exists under different names,
+it must be transmitted once for each name,
+potentially wasting bandwidth and cache space.
+
+There is also the issue of trusting
+that the data you received is valid for what you requested.
+NDN and CICN both rely on having an established public key infrastructure
+to check that the data is published under authorized keys,
+while both Bittorrent and IPFS use hashes to verify the data matches the name.
+
+Cache management is an integral part of all the networks.
+The in-memory caching in NDN is designed to opportunisticly reduce latency and bandwidth,
+not as a permanant data store,
+although go-ndn showed that using an on-disk store is definitely possible.
+Bittorrent and IPFS instead function primarily
+to transmit data between their attached data stores.
+
+Content discovery can be split into
+discovering that content exists on a network,
+and locating the closest copy.
+NDN solves both by routing towards longest matching prefixes.
+CICN leaves the first question for higher level protocols
+and routes like NDN for the second problem.
+Interestingly, there is discussion of name resolution services
+for ICN networks that may sound unintuitive but allow
+for locating off-path copies of data that are closer.
+Bittorrent relies on external services to provide the intial
+discovery of data and uses a DHT to locate content,
+while IPFS uses a DHT for both.
+
+Depending on the bottleneck,
+there are a few ways of increasing the throughput of a single node,
+specifically a faster compute core, more compute cores, and more storage capacity.
+As a single threaded application,
+NDN would benefit from a faster core and more memory.
+The proof of concept above shows it is possible to
+adjust runtime memory capacity through load balancing,
+though this is still limited by the load balancer's capacity to distribute requests.
+CICN should benefit additionally benefit from multiple cores.
+
+Scale out...
+Increasing the size of the network adversely affects networks in many ways
+NDN routing table increase, tradeoff heirarchical names for lookup speed
+
+Connectivity...
+gossip, centralized discovery, static?
 
 ### Conclusion
 

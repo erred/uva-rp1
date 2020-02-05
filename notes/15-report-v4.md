@@ -70,7 +70,7 @@ and CRoS-NDN uses a centralised controller to distribute routes based on global 
 
 ## Named Data Networking
 
-NDN utilizes a stateful forwarding model
+TODO: describe hierarchical names
 
 A network can scale both its individual nodes and the number of nodes.
 Scaling an individual node is not as straightforward as it may first appear.
@@ -92,12 +92,9 @@ this requires a NDN protocol aware load balancer
 that can send similar requests to the same node
 to effectively utilize the multiple caches without duplication of content.
 
-Scaling the number of nodes within the network can itself be split into 2 parts,
-establishing the connections over which to communicate,
-and distributing routes
-Growing Network
+TODO: describe finding connections
 
-Route Distribution
+TODO: describe finding routes
 
 ## Proof of Concept
 
@@ -120,13 +117,11 @@ which it then distributes to its caching servers to connect to.
 Caching servers will directly connect to these load balancers,
 treating them as upstream servers.
 
-Running
+TODO: architecture diagram
 
-Architectural
+TODO: routes
 
-Scaling choices
-
-Results
+TODO: performance measurement
 
 ## Discussion
 
@@ -215,8 +210,6 @@ the resolvers could instead be replaced by an algorithmic translation
 from PIDs to NDN names which could be natively routed
 to retrieve the data from within the overlay network.
 
-Data model, doi, net control
-
 The hierarchical naming scheme of NDN provides both opportunities and challenges
 when applied to content distribution within federated clouds.
 While the free flow of data is highly valued by users,
@@ -225,6 +218,8 @@ In this case, both the data names and the identities used to sign the data
 can be used to apply access controls at the network level.
 
 ## Conclusion
+
+TODO: write conclusion
 
 ## Future Work
 

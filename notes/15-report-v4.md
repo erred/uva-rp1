@@ -42,11 +42,11 @@ Based on a survey of the available tools within the ecosystem,
 it would appear that this is still largely a manual process.
 This research will therefore focus on challenges
 and potential solutions to automating the deployment and
-scaling of a NDN network with a primary usecase of content distribution.
+scaling of a NDN network with a primary use case of content distribution.
 
 Specifically:
 
-- What is current landscape in deploying a NDN network?
+- What is the current landscape in deploying a NDN network?
 - What are the challenges in deploying a scalable network?
 - What are the feasible solutions to the challenges outlined above?
 - How would this apply to operating a federated research cloud?
@@ -63,7 +63,7 @@ Amongst the common concerns were scalability,
 as trials have been limited to less than 1000 users.
 
 Multiple routing strategies have been proposed,
-OSPFN is a modification of OSPF to distrubte NDN names over IP networks,
+OSPFN is a modification of OSPF to distribute NDN names over IP networks,
 NLSR is a NDN native implementation of link state routing,
 DCR implements distance based routing,
 and CRoS-NDN uses a centralised controller to distribute routes based on global state.
@@ -75,7 +75,7 @@ NDN utilizes a stateful forwarding model
 A network can scale both its individual nodes and the number of nodes.
 Scaling an individual node is not as straightforward as it may first appear.
 The first problem comes from the cache, which in NFD is in-memory,
-combined with the fact that there is simple way to dump and restore cache contents.
+combined with the fact that there is a simple way to dump and restore cache contents.
 Another problem is the fact that the NDN forwarding model is stateful,
 so it becomes even more challenging if the scaling is not to disrupt any client connections.
 
@@ -122,7 +122,7 @@ treating them as upstream servers.
 
 Running
 
-Architecural choices
+Architectural
 
 Scaling choices
 
@@ -162,7 +162,7 @@ Between the load balancer and its caches,
 Access Router Strategy was utilized as it could adapt to the rebalancing of caches
 without intervention while having better efficiency than pure multicast.
 While they are not the most efficient of strategies,
-they were selected to retain flexibility during reconfiguations of the network.
+they were selected to retain flexibility during reconfigurations of the network.
 
 The selected routing strategy is simplistic,
 caching nodes will connect directly to all its upstreams to get the available routes.
@@ -195,10 +195,10 @@ each of which can suffer from faults.
 The loss of a discovery server would preclude the addition of any new
 load balancing groups to the network,
 but the existing network would continue to function normally,
-including the propagation of routes and the disconection of a load balancing group.
+including the propagation of routes and the disconnection of a load balancing group.
 Losing a caching server within a load balancing group would obviously decrease
 the effective cache size of the group,
-but would otherwise be handled in the same way as an intentional disconection,
+but would otherwise be handled in the same way as an intentional disconnection,
 triggering a redistribution of routes between the remaining caching servers.
 The loss of a load balancer is however much more disruptive,
 as it would disconnect any content hosts and clients from the network.
@@ -217,7 +217,7 @@ to retrieve the data from within the overlay network.
 
 Data model, doi, net control
 
-The hierarchical naming schem of NDN provides both opportunities and challenges
+The hierarchical naming scheme of NDN provides both opportunities and challenges
 when applied to content distribution within federated clouds.
 While the free flow of data is highly valued by users,
 network operators are loth to give up complete control.
@@ -230,8 +230,8 @@ can be used to apply access controls at the network level.
 
 The choice of a central discovery server was suboptimal in regards to fault tolerance.
 Some future implementation may wish to have nodes gossip with each other
-to discover new neighbours, utilizing either broadcast, mulitcast, or a bootstrap list
-for finding an initial connection.
+to discover new neighbours, utilizing either broadcast, multicast,
+or a bootstrap list for finding an initial connection.
 The proof of concept intentionally utilizes a simple routing scheme
 to enforce the direction of data flow,
 but once the underlying connections have been established it could

@@ -27,9 +27,9 @@ services:
         ipv4_address: "172.21.1.1"
     environment:
       WATCHER: "172.21.0.2:8000"
-      NDN_AUTOCONFIG_FACEURI: "udp://172.21.1.1:6363"
-      NDN_AUTOCONFIG_PREFIXES: "-p /producer/1"
-      NDN_AUTOCONFIG_SERVER_DISABLED: ""
+      # NDN_AUTOCONFIG_FACEURI: "udp://172.21.1.1:6363"
+      # NDN_AUTOCONFIG_PREFIXES: "-p /producer/1"
+      # NDN_AUTOCONFIG_SERVER_DISABLED: ""
 
   producer1a:
     image: seankhliao/ndn-traffic
@@ -42,7 +42,7 @@ services:
       - ./producer1a:/usr/local/etc/ndn
     environment:
       NDN_TRAFFIC_SERVER_DISABLED: ""
-      NDN_AUTOCONFIG_DISABLED: ""
+      # NDN_AUTOCONFIG_DISABLED: ""
 
   consumer1a:
     image: seankhliao/ndn-traffic
@@ -53,6 +53,6 @@ services:
         ipv4_address: "172.21.1.31"
     volumes:
       - ./consumer1a:/usr/local/etc/ndn
-    environment:
-      NDN_TRAFFIC_CLIENT_DISABLED: ""
-      NDN_AUTOCONFIG_DISABLED: ""
+    # environment:
+      # NDN_TRAFFIC_CLIENT_DISABLED: ""
+      # NDN_AUTOCONFIG_DISABLED: ""

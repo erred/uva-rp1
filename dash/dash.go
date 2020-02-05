@@ -73,30 +73,33 @@ func (d *Dash) Run() error {
 
 	d.log.Info().Msg("starting uilive")
 	ui := uilive.New()
-	ui.RefreshInterval = 10 * time.Millisecond
+	ui.RefreshInterval = 100 * time.Millisecond
 	ui.Start()
 	defer ui.Stop()
 
-	draw(ui, d.update())
+	rows := draw(ui, d.update(), 0)
 	for range time.NewTicker(d.interval).C {
-		draw(ui, d.update())
+		rows = draw(ui, d.update(), rows)
 	}
 
 	return nil
 }
 
-func draw(ui *uilive.Writer, up []*api.StatusPrimary) {
+var cacheh map[string][]int = make(map[string][]int)
+var cachem map[string][]int = make(map[string][]int)
+
+func draw(ui *uilive.Writer, up []*api.StatusPrimary, prevrows int) int {
 	tab := uitable.New()
 	tab.MaxColWidth = 80
 	tab.RightAlign(1)
 	tab.RightAlign(2)
 	tab.RightAlign(3)
 	tab.AddRow("")
-	tab.AddRow("NODE", "CACHE", "MEMORY (B)", "IN/OUT (B)", "CONNECTED", "ROUTES")
-	// tab.AddRow("NODE", "CACHE", "MEMORY (B)", "IN/OUT (B)")
+	tab.AddRow("NODE", "CACHE", "MEMORY (B)", "IN/OUT (B)", "ROUTES")
 	sort.Slice(up, func(i, j int) bool {
 		return up[i].Id < up[j].Id
 	})
+	var rowcnt int
 	for p := range up {
 		sort.Slice(up[p].Secondaries, func(i, j int) bool {
 			return up[p].Secondaries[i].Id < up[p].Secondaries[j].Id
@@ -107,14 +110,15 @@ func draw(ui *uilive.Writer, up []*api.StatusPrimary) {
 		sort.Slice(up[p].Local.Routes, func(i, j int) bool {
 			return up[p].Local.Routes[i] < up[p].Local.Routes[j]
 		})
+
 		tab.AddRow(
 			up[p].Id,
 			fmt.Sprintf("%d / %d", up[p].Local.CsEntries, up[p].Local.CsCapacity),
 			strconv.FormatInt(up[p].Local.Memory, 10),
 			fmt.Sprintf("%d / %d", up[p].Local.BytesIn, up[p].Local.BytesOut),
-			strings.Join(up[p].Local.Connected, ", "),
 			strings.Join(up[p].Local.Routes, ", "),
 		)
+		rowcnt++
 		for s := range up[p].Secondaries {
 			sort.Slice(up[p].Secondaries[s].Connected, func(i, j int) bool {
 				return up[p].Secondaries[s].Connected[i] < up[p].Secondaries[s].Connected[j]
@@ -122,6 +126,7 @@ func draw(ui *uilive.Writer, up []*api.StatusPrimary) {
 			sort.Slice(up[p].Secondaries[s].Routes, func(i, j int) bool {
 				return up[p].Secondaries[s].Routes[i] < up[p].Secondaries[s].Routes[j]
 			})
+
 			prefix := " ├ "
 			if s == len(up[p].Secondaries)-1 {
 				prefix = " └ "
@@ -131,13 +136,17 @@ func draw(ui *uilive.Writer, up []*api.StatusPrimary) {
 				fmt.Sprintf("%d / %d", up[p].Secondaries[s].CsEntries, up[p].Secondaries[s].CsCapacity),
 				strconv.FormatInt(up[p].Secondaries[s].Memory, 10),
 				fmt.Sprintf("%d / %d", up[p].Secondaries[s].BytesIn, up[p].Secondaries[s].BytesOut),
-				strings.Join(up[p].Secondaries[s].Connected, ", "),
 				strings.Join(up[p].Secondaries[s].Routes, ", "),
 			)
+			rowcnt++
 		}
+	}
+	for i := rowcnt; i < prevrows; i++ {
+		tab.AddRow("", "", "", "", "")
 	}
 
 	fmt.Fprint(ui.Newline(), tab)
+	return rowcnt
 }
 
 func (d *Dash) update() []*api.StatusPrimary {

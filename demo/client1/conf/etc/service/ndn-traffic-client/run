@@ -1,0 +1,6 @@
+#!/bin/sh
+
+sleep 4
+exec nfdc face create $PRIMARY || true
+exec nfdc route add / $PRIMARY || true
+exec ndn-traffic-client -q -i 5 /usr/local/etc/ndn/ndn-traffic-client.conf

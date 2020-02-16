@@ -1,0 +1,3 @@
+FROM seankhliao/producerx
+ENV TRAFFICWRAP_DISABLED=
+COPY consumer /usr/local/etc/ndn

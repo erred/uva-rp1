@@ -1,0 +1,3 @@
+FROM seankhliao/producerx
+ENV NDN_TRAFFIC_SERVER_DISABLED=
+COPY producerd /usr/local/etc/ndn

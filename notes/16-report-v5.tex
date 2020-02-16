@@ -1,0 +1,347 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\def\code#1{\texttt{#1}}
+
+\begin{document}
+
+\title{Automated Deployment and Scaling of Named Data Networks in Cloud Environments
+
+{\large
+Security and Network Engineering, University of Amsterdam, The Netherlands
+}
+\\
+\vspace*{5pt}
+\normalsize
+\today
+}
+\author{
+    \IEEEauthorblockN{Sean Liao}
+    \IEEEauthorblockA{
+    sean.liao@os3.nl}
+}
+
+\maketitle
+\begin{abstract}
+Named Data Networking (NDN) is a clean slate internet architecture
+designed from the ground up to put data distribution front and center.
+This research looks at some of the potential operational challenges
+and solutions in applying NDN to a federated research cloud environment.
+Specifically, a load-balanced solution is proposed to mitigate
+performance limitations of the NDN router.
+\end{abstract}
+
+
+
+\section*{Introduction}
+The European Open Science Cloud (EOSC) \cite{eosc} is a
+'federated ecosystem of research data infrastructures'.
+One such set of research infrastructure is
+the ENVironmental Research Infrastructures (ENVRI) community \cite{envri},
+itself a federated ecosystem of data infrastructure.
+Within these communities, there is an increase in use of
+Persistent Identifiers (PID) for naming their Digital Objects (DO).
+The need to resolve and access this content across the network
+in a way consistent with the Global Digital Object Cloud (DOC) vision \cite{objcloud},
+appeared like a good match with the capabilities of
+Named Data Networking (NDN) \cite{ndn}.
+Thus inspired this research into the deployment and scaling
+of NDN networks for use in cloud environments.
+
+There are several active projects under the
+Information Centric Networking (ICN) umbrella \cite{icn},
+one is Content Centric Networking (CCN)
+and another is Named Data Networking (NDN).
+They were designed as clean-slate internet architectures
+that move away from traditional host-centric IP-based networking,
+to one that treats data objects as a first class citizen of the network.
+This shift in perspective enables a new set of capabilities,
+such as providing data independence from where they are served
+while retaining authenticity, and by extension,
+widespread use of caching at the network layer.
+
+To apply NDN to solve content distribution problems \cite{ndnbigdata},
+it is necessary to operate such a network \cite{ndntestbed}.
+Based on a survey of the available tools within the ecosystem,
+it would appear that this is still largely a manual process.
+This research will therefore focus on challenges
+and potential solutions to automating the deployment and
+scaling of a NDN network with a primary use case of content distribution.
+
+Specifically:
+
+\begin{itemize}
+    \item What is the current landscape in deploying a NDN network?
+    \item What are the challenges and feasible solutions to the challenges outlined above?
+\end{itemize}
+
+While caching and forwarding are fundamental parts of NDN,
+this research will be limited to using the strategies available
+with the reference implementation of the NDN router.
+
+
+
+\section*{Related Work}
+The ICN Research Group (ICNRG) has an Internet Draft on deployment guidelines \cite{deployguide},
+which lists the different possible configurations and known trial deployments.
+Amongst the common concerns were scalability \cite{scalableoverview} \cite{scalablenote},
+as trials have been limited to less than 1000 users.
+Based on NDN development progress,
+the reality check \cite{reality} on wide scale NDN deployment still appears to hold true,
+
+Multiple routing strategies have been proposed,
+OSPFN \cite{ospfn} is a modification of OSPF to distribute NDN names over IP networks,
+NLSR  \cite{nlsr} is a NDN native implementation of link state routing,
+DCR \cite{dcr} implements distance based routing,
+and CRoS-NDN \cite{cros}  uses a centralised controller to distribute routes based on global state.
+While they implement different routing protocols,
+they all require some form of existing topology.
+
+
+
+\section*{Named Data Networking}
+This research will focus on NDN and the reference implementation of its router,
+NDN Forwarding Daemon (NFD).
+At time time of writing, this appeared to be the only well-documented and working
+router to run experiments on.
+
+By design, NDN uses a hierarchical naming scheme,
+used to both delegate namespaces to entities and to aid in forwarding.
+This delegation is enforced through the use of public key cryptography,
+tying all valid data back to a traceable entitiy.
+Another design choice of NDN is the use of a stateful forwarding plane \cite{statefulforward}.
+Within NFD, this is implemented as a NameTree \cite{nfd}, a combined tree and hash table structure.
+Based on preliminary testing, it has issues scaling beyond 50000 concurrent requests.
+
+A network can scale both its individual nodes and the number of nodes.
+Scaling an individual node is not as straightforward as it may first appear.
+The problems come from not wishing to disrupt any client connections,
+and also not wishing to lose state,
+both in the forwarding plane and in the in-memory cache.
+The problem of the in-memory cache
+stem mainly from the lack of observability into the current cache contents,
+complicating management and migration schemes.
+
+The general solutions are to replace the existing node
+or to add new nodes either in front or behind.
+Replacing the existing node loses both the cache and forwarding state.
+Placing in a new node in front still breaks client connections,
+but allows it copy the cache contents
+from the old node as they are requested by clients.
+Placing a new node behind keeps the current forwarding state and cache,
+but may result in duplication of cache contents.
+An alternate solution would be to load balance requests between multiple nodes,
+this requires a NDN protocol aware load balancer
+that can send similar requests to the same node
+to effectively utilize the multiple caches without duplication of content.
+
+To scale the number of nodes within a network,
+new nodes first need to be connected to a preexisting network.
+It would appear that the only only automated solution available so far is NDN's
+Find Closest Hub protocol, used to connect clients to a gateway.
+None of the routing protocols above solve this problem.
+
+To solve this problem, the solutions are some form of broadcast, or multicast,
+a bootstrap list, or a central discovery server.
+Broadcast or multicast is difficult proposition,
+especially within cloud environments where deployments may span multiple datacenters.
+A bootstrap list combined with a gossiping between nodes would work,
+though it is more complex to get right.
+A central discovery server is easy to setup and is often used by projects
+as a temporary workaround while the decentralised gossip protocol is refined.
+
+
+
+\section*{Proof of Concept}
+To solve the issue of scaling up a node,
+the load-balancing model described above was implemented.
+Practically, this means running a controller on the load balancing node
+responsible for collecting the available routes and distributing them
+to caching nodes.
+An additional controller was required for the caching nodes to register
+with the load balancers, open connections to upstreams, and register routes.
+Together they form a load balancing group
+which will be the unit of scaling within the network.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.4]{images/controlflow.png}
+    \caption{Control Flow}
+    \label{control}
+\end{figure}
+
+Due to time constraints,
+the decision was made to implement the central discovery server model
+for connecting new load balancing groups to the network.
+Load balancers connect to the discovery server, advertising itself
+and getting back all the other known load balancers,
+which it then distributes to its caching servers to connect to.
+Caching servers will directly connect to these load balancers,
+treating them as upstream servers.
+This results in the control flow between network nodes as shown in \ref{control}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.4]{images/dataflow.png}
+    \caption{Data Flow, responses/data flows along the reverse path of requests}
+    \label{data}
+\end{figure}
+
+The above process results in a fully connected mesh between load balancing groups.
+This feasible because it runs in the cloud,
+where reachability between locations is generally not a concern.
+It also appears to be a reasonable trade-off between path length and intermediary caches,
+resulting in a 3-layer cache (local load balancer, local cache server, remote load balancer, remote producer).
+This can be seen in a simplified form in \ref{data}.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.4]{images/Roundtrip Time.png}
+    \caption{Roundtrip time during cache scaling events}
+    \label{rt}
+\end{figure}
+
+As validation, a test recording request latencies during cache scaling events was run.
+4 load balancing groups with attached data sources were placed in separate locations
+(Google Cloud Platform datacenter locations:
+\texttt{us-east1-b}, \texttt{us-west1-b}, \texttt{asia-east1-b}, \texttt{australia-southeast1-b}).
+A fifth load balancing group with a data consumer was placed in \texttt{europe-west4-a}.
+The consumer made requests to all 4 sources with an even distribution.
+Starting with 0 caching servers, after every 2000 requests a scaling event was performed:
+(2000, 4000: add a caching server, 6000, 8000: remove a caching server).
+The load balancers were configured with a minimal cache capacity
+and the caching servers each had a capacity equal to half of all unique requests.
+
+
+From \ref{rt} we can observe the consumer load balancing cache as the line just above 0.
+The effects of the caching server are clearly visible as line between 2000 and 8000 requests
+at just under a millisecond.
+All other requests are hitting their respective origins.
+This shows that the partitioning of requests between the caching servers works,
+as only a non overlapping partition would allow the combined caches to cover all requests.
+
+\section*{Discussion}
+
+    \subsection*{Efficiency}
+    As caching is an integral part of the network,
+    its efficiency is understandably of high concern.
+    The use of advanced caching strategies was left out of scope,
+    selecting a different one will, affect the following analysis.
+    The load balancing configuration used in the proof of concept
+    allows for a theoretical effective cache size
+    equal to all the caching servers combined.
+    However, this requires insight into cache hit rates
+    of individual pieces of content to rebalance routes between caches.
+    Currently, this would only be possible by either implementing a custom
+    caching strategy or by reconstructing cache state based on the debug logs.
+    Instead, the selected solution is a naive partitioning
+    based on the available upstream load balancing groups,
+    which leaves it vulnerable to both hot caches
+    (where all the requests are for a single group)
+    and reduced efficiency when content is available from multiple routes,
+    though this is somewhat mitigated by the choice of forwarding strategy.
+
+    With the load balancing configuration above,
+    there are 2 places where forwarding strategies can take affect:
+    how a load balancer routes to its caches, and how a cache routes to its upstreams.
+    Between a cache and its upstream servers, the choice was made to use
+    Adaptive Smoothed RTT-based Forwarding Strategy (ASF).
+    This was to compensate for the lack of configurability in link cost,
+    instead opting to probe upstreams regularly based on response times.
+    This opens the possibility of discovering longer paths through intermediary
+    load balancing groups should the direct path to an upstream fail,
+    simply by having the proposed intermediaries serve a shared prefix.
+    Between the load balancer and its caches,
+    Access Router Strategy was utilized as it could adapt to the rebalancing of caches
+    without intervention while having better efficiency than pure multicast.
+    While they are not the most efficient of strategies,
+    they were selected to retain flexibility during reconfigurations of the network.
+
+    The selected routing strategy is simplistic,
+    caching nodes will connect directly to all its upstreams to get the available routes.
+    It relies heavily on the ASF forwarding strategy to actually select the best path.
+
+    Maintaining a separate TCP control channel for each connection
+    is perhaps not the most efficient of designs in terms of resource usage,
+    but in exchange it allows for fast reaction times.
+    Routes can be pushed directly to downstreams as soon as they have changed,
+    While faults will break the connection, triggering immediate updates,
+    as opposed to the alternative of waiting for downstreams to discover
+    the loss either through timeouts or keepalives.
+
+    \subsection*{Fault Tolerance}
+    On a data connection between 2 NDN nodes,
+    losses can be addressed either in the transport protocol or at the NDN level.
+    Using TCP as the transport protocol would hide any losses from the NDN protocol
+    but introduces its own head of line blocking problem similar to what HTTP/2
+    faces as NDN multiplexes multiple requests over a single TCP stream.
+    Using UDP exposes the losses to the NDN protocol,
+    and it would appear that the current implementation
+    simply retransmits the entire NDN packet, leading to poor performance.
+    There is an opportunity here to improve the retransmission protocol,
+    perhaps to something similar to QUIC,
+    though as of the time of writing, no such efforts are known to exist.
+
+    Within the shown proof of concept, there are 3 different types of nodes,
+    each of which can suffer from faults.
+    The loss of a discovery server would preclude the addition of any new
+    load balancing groups to the network,
+    but the existing network would continue to function normally,
+    including the propagation of routes and the disconnection of a load balancing group.
+    Losing a caching server within a load balancing group would obviously decrease
+    the effective cache size of the group,
+    but would otherwise be handled in the same way as an intentional disconnection,
+    triggering a redistribution of routes between the remaining caching servers.
+    The loss of a load balancer is however much more disruptive,
+    as it would disconnect any content hosts and clients from the network.
+    In this case, the recommended solution would be
+    to leverage the fact that NDN is not host-centric,
+    and maintain connections to several load balancing groups,
+    effectively multi-homing the content.
+
+    % \subsection*{Resolving Digital Objects}
+    %
+    % On the current internet, we rely on centralised infrastructure to
+    % resolve PIDs to data they represent. With an NDN overlay,
+    % the resolvers could instead be replaced by an algorithmic translation
+    % from PIDs to NDN names which could be natively routed
+    % to retrieve the data from within the overlay network.
+    %
+    % The hierarchical naming scheme of NDN provides both opportunities and challenges
+    % when applied to content distribution within federated clouds.
+    % While the free flow of data is highly valued by users,
+    % network operators are loth to give up complete control.
+    % In this case, both the data names and the identities used to sign the data
+    % can be used to apply access controls at the network level.
+
+
+
+\section*{Future Work}
+The choice of a central discovery server was suboptimal in regards to fault tolerance.
+Some future implementation may wish to have nodes gossip with each other
+to discover new neighbours, utilizing either broadcast, multicast,
+or a bootstrap list for finding an initial connection.
+The proof of concept intentionally utilizes a simple routing scheme
+to enforce the direction of data flow,
+but once the underlying connections have been established it could
+instead hand off routing to some more advanced implementation,
+such as NLSR or CRoS-NDN.
+
+
+
+\section*{Conclusion}
+TODO: conclusion
+
+
+
+\bibliographystyle{./bibliography/IEEEtran}
+\bibliography{./bibliography/references}
+
+\end{document}

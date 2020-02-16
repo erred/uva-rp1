@@ -1,0 +1,83 @@
+version: "3.7"
+networks:
+  servers:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.27.0.0/16"
+
+services:
+  watcher1:
+    image: seankhliao/ndn-watcher
+    expose:
+      - "8000"
+    networks:
+      servers:
+        ipv4_address: "172.27.0.2"
+
+  producera:
+    image: seankhliao/producerx
+    expose:
+      - "6363"
+      - "8000"
+    volumes:
+      - ./producera:/usr/local/etc/ndn
+    networks:
+      servers:
+        ipv4_address: "172.27.1.1"
+    environment:
+      NDN_TRAFFIC_SERVER_DISABLED: ""
+      WATCHER: "172.27.0.2:8000"
+  producerb:
+    image: seankhliao/producerx
+    expose:
+      - "6363"
+      - "8000"
+    volumes:
+      - ./producerb:/usr/local/etc/ndn
+    networks:
+      servers:
+        ipv4_address: "172.27.1.2"
+    environment:
+      NDN_TRAFFIC_SERVER_DISABLED: ""
+      WATCHER: "172.27.0.2:8000"
+  producerc:
+    image: seankhliao/producerx
+    expose:
+      - "6363"
+      - "8000"
+    volumes:
+      - ./producerc:/usr/local/etc/ndn
+    networks:
+      servers:
+        ipv4_address: "172.27.1.3"
+    environment:
+      NDN_TRAFFIC_SERVER_DISABLED: ""
+      WATCHER: "172.27.0.2:8000"
+  producerd:
+    image: seankhliao/producerx
+    expose:
+      - "6363"
+      - "8000"
+    volumes:
+      - ./producerd:/usr/local/etc/ndn
+    networks:
+      servers:
+        ipv4_address: "172.27.1.4"
+    environment:
+      NDN_TRAFFIC_SERVER_DISABLED: ""
+      WATCHER: "172.27.0.2:8000"
+
+  consumer:
+    image: seankhliao/producerx
+    expose:
+      - "6363"
+      - "8000"
+    networks:
+      servers:
+        ipv4_address: "172.27.2.1"
+    volumes:
+      - ./consumer:/usr/local/etc/ndn
+    environment:
+      TRAFFICWRAP_DISABLED: ""
+      WATCHER: "172.27.0.2:8000"

@@ -3,9 +3,10 @@ package watcher
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/seankhliao/uva-rp1/api"
 	"google.golang.org/grpc"
-	"time"
 )
 
 func (w *Watcher) Primaries(p *api.Primary, s api.Reflector_PrimariesServer) error {
